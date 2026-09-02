@@ -155,6 +155,48 @@ class TestAuditLedger(unittest.TestCase):
         with self.assertRaises(ValueError):
             ledger.append("event", {"value": float("nan")})
 
+    def test_canonical_state_ignores_mapping_order(self):
+        first = {"a": 1, "nested": {"b": [True, None, "é"], "c": 2.5}}
+        second = {"nested": {"c": 2.5, "b": (True, None, "é")}, "a": 1}
+
+        first_commitment = ImmutableAuditLedger._commit_state(
+            0, ImmutableAuditLedger.GENESIS_COMMITMENT, first
+        )
+        second_commitment = ImmutableAuditLedger._commit_state(
+            0, ImmutableAuditLedger.GENESIS_COMMITMENT, second
+        )
+
+        self.assertEqual(first_commitment, second_commitment)
+
+    def test_parent_and_anchor_changes_commitment(self):
+        state = {"value": 1, "anchors": {"branch": "main"}}
+        genesis = ImmutableAuditLedger.GENESIS_COMMITMENT
+
+        commitment = ImmutableAuditLedger._commit_state(0, genesis, state)
+        different_parent = ImmutableAuditLedger._commit_state(0, "1" * 64, state)
+        different_anchor = ImmutableAuditLedger._commit_state(
+            0, genesis, {"value": 1, "anchors": {"branch": "release"}}
+        )
+
+        self.assertNotEqual(commitment, different_parent)
+        self.assertNotEqual(commitment, different_anchor)
+
+    def test_canonical_state_supports_empty_and_optional_values(self):
+        state = {"empty": {}, "optional": None, "items": [], "coordinates": (1, 2.0)}
+        commitment = ImmutableAuditLedger._commit_state(
+            0, ImmutableAuditLedger.GENESIS_COMMITMENT, state
+        )
+
+        self.assertIsInstance(commitment, str)
+        self.assertEqual(len(commitment), 64)
+
+    def test_repeated_identical_transitions_are_reproducible(self):
+        payload = Payload("Test", {"source_id": "test"})
+        first = FortressUnified(FortressConfig()).process(payload, 5.0, 100.0)
+        second = FortressUnified(FortressConfig()).process(payload, 5.0, 100.0)
+
+        self.assertEqual(first["state_commitment"], second["state_commitment"])
+
 
 class TestSAGEController(unittest.TestCase):
     def test_regime_classification_stable(self):

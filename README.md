@@ -271,6 +271,15 @@ The purpose is to preserve information about:
 
 The kernel therefore treats control as an observable operation rather than an opaque function call.
 
+## State Provenance
+
+Each committed audit state receives a deterministic `state_commitment`. The commitment
+canonically serializes the relevant FORTRESS state and includes the prior commitment,
+creating a logical chain across transitions. The existing HMAC remains the mechanism
+for authenticating audit records; the commitment is an identifier and tamper-evident
+link, not encryption, non-repudiation, or protection against a compromised audit key.
+
+
 ---
 
 # Deterministic Control
