@@ -7,6 +7,7 @@ import json
 import math
 import unittest
 from datetime import datetime as dt
+from unittest.mock import Mock
 
 import numpy as np
 
@@ -19,6 +20,7 @@ from fortress_unified import (
     InvariantMonitor,
     MandateLayer,
     ImmutableAuditLedger,
+    OscillationDetector,
     SAGEController,
     LyapunovController,
     EnergyController,
@@ -196,6 +198,72 @@ class TestAuditLedger(unittest.TestCase):
         second = FortressUnified(FortressConfig()).process(payload, 5.0, 100.0)
 
         self.assertEqual(first["state_commitment"], second["state_commitment"])
+
+
+class TestOscillationDetector(unittest.TestCase):
+    def test_first_observation_is_not_repeated(self):
+        detector = OscillationDetector()
+
+        self.assertFalse(detector.is_oscillating("A"))
+
+    def test_immediate_repetition_is_detected(self):
+        detector = OscillationDetector()
+
+        self.assertFalse(detector.is_oscillating("A"))
+        self.assertTrue(detector.is_oscillating("A"))
+
+    def test_case_and_whitespace_are_normalized(self):
+        detector = OscillationDetector()
+
+        detector.is_oscillating("  Hello  ")
+
+        self.assertTrue(detector.is_oscillating("hello"))
+
+    def test_different_observations_are_not_repeated(self):
+        detector = OscillationDetector()
+
+        self.assertEqual(
+            [detector.is_oscillating(value) for value in ("A", "B", "C")],
+            [False, False, False],
+        )
+
+    def test_reset_starts_a_new_session(self):
+        detector = OscillationDetector()
+        detector.is_oscillating("A")
+
+        detector.reset()
+
+        self.assertFalse(detector.is_oscillating("A"))
+
+    def test_instances_are_isolated(self):
+        first = OscillationDetector()
+        second = OscillationDetector()
+        first.is_oscillating("A")
+
+        self.assertFalse(second.is_oscillating("A"))
+
+    def test_empty_observations_are_tracked_deliberately(self):
+        detector = OscillationDetector()
+
+        self.assertFalse(detector.is_oscillating(""))
+        self.assertTrue(detector.is_oscillating("   "))
+
+
+class TestOscillationIntegration(unittest.TestCase):
+    def test_signal_is_advisory_and_recorded_in_existing_audit(self):
+        detector = OscillationDetector()
+        fortress = FortressUnified(FortressConfig(), oscillation_detector=detector)
+        fortress.controller.process = Mock(return_value={"controller": "TEST", "output": "A"})
+        payload = Payload("Test", {})
+
+        first = fortress.process(payload, 5.0, 100.0)
+        second = fortress.process(payload, 5.0, 100.0)
+
+        self.assertFalse(first["oscillation_detected"])
+        self.assertTrue(second["oscillation_detected"])
+        self.assertEqual(second["output"], "A")
+        self.assertTrue(fortress.audit.verify_integrity())
+        self.assertTrue(fortress.audit.ledger[1]["data"]["oscillation_detected"])
 
 
 class TestSAGEController(unittest.TestCase):

@@ -279,6 +279,11 @@ creating a logical chain across transitions. The existing HMAC remains the mecha
 for authenticating audit records; the commitment is an identifier and tamper-evident
 link, not encryption, non-repudiation, or protection against a compromised audit key.
 
+An optional `OscillationDetector` can report repeated normalized controller-result
+observations across a kernel instance. It is resettable and instance-scoped, and its
+signal is advisory: repeated output is not necessarily mathematical oscillation and
+does not authorize, reject, or alter a control result.
+
 
 ---
 

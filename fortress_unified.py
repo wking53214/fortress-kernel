@@ -305,6 +305,28 @@ class ImmutableAuditLedger:
         return True
 
 
+class OscillationDetector:
+    """Detect repeated normalized observations across a control session.
+
+    This reports repeated observations only; it does not infer mathematical
+    oscillation or make control decisions.
+    """
+
+    def __init__(self) -> None:
+        self._seen: set[str] = set()
+
+    def is_oscillating(self, text: str) -> bool:
+        """Return whether ``text`` has already been observed in this session."""
+        normalized = text.strip().lower()
+        repeated = normalized in self._seen
+        self._seen.add(normalized)
+        return repeated
+
+    def reset(self) -> None:
+        """Start a new observation session."""
+        self._seen.clear()
+
+
 # ============================================================================
 # ABSTRACT CONTROLLER
 # ============================================================================
@@ -501,12 +523,17 @@ class EnergyController(Controller):
 class FortressUnified:
     """Central unified governance kernel orchestrating all controller modes."""
 
-    def __init__(self, config: Optional[FortressConfig] = None):
+    def __init__(
+        self,
+        config: Optional[FortressConfig] = None,
+        oscillation_detector: Optional[OscillationDetector] = None,
+    ):
         self.config = config or FortressConfig()
         self.integrity = IntegrityLayer(self.config)
         self.invariant = InvariantMonitor()
         self.drift = DriftMonitor(self.config)
         self.audit = ImmutableAuditLedger()
+        self.oscillation_detector = oscillation_detector
 
         # Select controller based on config
         if self.config.controller_mode == "sage":
@@ -576,21 +603,32 @@ class FortressUnified:
         # Run selected controller
         controller_result = self.controller.process(payload, error, live_signal)
 
+        oscillation_detected = None
+        if self.oscillation_detector is not None:
+            observation = self.audit._canonical_json(controller_result).decode("utf-8")
+            oscillation_detected = self.oscillation_detector.is_oscillating(observation)
+
         # Audit
         state_snapshot = self._state_snapshot(payload, error, live_signal, controller_result)
-        state_commitment = self.audit.append("governance_decision", {
+        audit_data = {
             "error": error,
             "live_signal": live_signal,
             "controller": self.config.controller_mode,
-            "result": controller_result
-        }, state=state_snapshot)
+            "result": controller_result,
+        }
+        if oscillation_detected is not None:
+            audit_data["oscillation_detected"] = oscillation_detected
+        state_commitment = self.audit.append("governance_decision", audit_data, state=state_snapshot)
 
-        return {
+        result = {
             **controller_result,
             "distortion": integrity_result.get("distortion", 0.0),
             "integrity": "VERIFIED" if payload.metadata.get("signature") else "UNVERIFIED",
             "state_commitment": state_commitment,
         }
+        if oscillation_detected is not None:
+            result["oscillation_detected"] = oscillation_detected
+        return result
 
 
 if __name__ == "__main__":

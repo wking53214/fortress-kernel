@@ -16,6 +16,7 @@ from fortress_unified import (
     DriftMonitor,
     MandateLayer,
     ImmutableAuditLedger,
+    OscillationDetector,
 )
 
 __version__ = "1.0.0"
@@ -38,4 +39,5 @@ __all__ = [
     "DriftMonitor",
     "MandateLayer",
     "ImmutableAuditLedger",
+    "OscillationDetector",
 ]
