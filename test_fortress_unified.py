@@ -125,6 +125,36 @@ class TestAuditLedger(unittest.TestCase):
         ledger.ledger[0]["data"]["msg"] = "tampered"
         self.assertFalse(ledger.verify_integrity())
 
+    def test_state_commitments_chain_records(self):
+        ledger = ImmutableAuditLedger()
+        first = ledger.append("event1", {"msg": "test"}, state={"value": 1})
+        second = ledger.append("event2", {"msg": "test2"}, state={"value": 2})
+
+        self.assertNotEqual(first, second)
+        self.assertEqual(ledger.ledger[1]["parent"], first)
+        self.assertTrue(ledger.verify_integrity())
+
+    def test_chain_detects_deleted_record(self):
+        ledger = ImmutableAuditLedger()
+        ledger.append("event1", {"msg": "test"})
+        ledger.append("event2", {"msg": "test2"})
+        ledger.ledger.pop(0)
+
+        self.assertFalse(ledger.verify_integrity())
+
+    def test_chain_detects_reordered_records(self):
+        ledger = ImmutableAuditLedger()
+        ledger.append("event1", {"msg": "test"})
+        ledger.append("event2", {"msg": "test2"})
+        ledger.ledger.reverse()
+
+        self.assertFalse(ledger.verify_integrity())
+
+    def test_state_commitment_rejects_ambiguous_values(self):
+        ledger = ImmutableAuditLedger()
+        with self.assertRaises(ValueError):
+            ledger.append("event", {"value": float("nan")})
+
 
 class TestSAGEController(unittest.TestCase):
     def test_regime_classification_stable(self):
@@ -288,6 +318,13 @@ class TestFortressUnified(unittest.TestCase):
         fortress.process(payload, 5.0, 100.0)
         fortress.process(payload, 6.0, 101.0)
 
+        self.assertTrue(fortress.audit.verify_integrity())
+
+    def test_process_exposes_and_records_state_commitment(self):
+        fortress = FortressUnified(FortressConfig())
+        result = fortress.process(Payload("Test", {}), 5.0, 100.0)
+
+        self.assertEqual(result["state_commitment"], fortress.audit.ledger[0]["state_commitment"])
         self.assertTrue(fortress.audit.verify_integrity())
 
 

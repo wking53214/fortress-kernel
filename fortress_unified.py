@@ -18,7 +18,7 @@ import logging
 import math
 from abc import ABC, abstractmethod
 from collections import deque
-from dataclasses import dataclass, field, replace
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime as dt
 from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Union
@@ -205,30 +205,103 @@ class MandateLayer:
 # ============================================================================
 
 class ImmutableAuditLedger:
-    """HMAC-signed immutable audit trail."""
+    """HMAC-signed audit trail with chained state commitments."""
+
+    STATE_COMMITMENT_VERSION = 1
+    GENESIS_COMMITMENT = "0" * 64
 
     def __init__(self, audit_key: str = "fortress-key"):
         self.audit_key = audit_key.encode()
         self.ledger: List[Dict[str, Any]] = []
+        self._next_sequence = 0
+        self._parent_commitment = self.GENESIS_COMMITMENT
 
-    def append(self, event_type: str, data: Dict[str, Any]) -> None:
+    @staticmethod
+    def _canonicalize(value: Any) -> Any:
+        if value is None or isinstance(value, (str, bool, int)):
+            return value
+        if isinstance(value, float):
+            if not math.isfinite(value):
+                raise ValueError("State commitment cannot encode non-finite floats.")
+            return value
+        if isinstance(value, dict):
+            if not all(isinstance(key, str) for key in value):
+                raise TypeError("State commitment mappings require string keys.")
+            return {
+                key: ImmutableAuditLedger._canonicalize(value[key])
+                for key in sorted(value)
+            }
+        if isinstance(value, (list, tuple)):
+            return [ImmutableAuditLedger._canonicalize(item) for item in value]
+        raise TypeError(f"Unsupported state commitment value: {type(value).__name__}")
+
+    @classmethod
+    def _canonical_json(cls, value: Any) -> bytes:
+        return json.dumps(
+            cls._canonicalize(value),
+            ensure_ascii=False,
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+
+    @classmethod
+    def _commit_state(cls, sequence: int, parent: str, state: Any) -> str:
+        commitment_input = {
+            "domain": "FORTRESS_STATE_COMMITMENT",
+            "version": cls.STATE_COMMITMENT_VERSION,
+            "sequence": sequence,
+            "parent": parent,
+            "state": state,
+        }
+        return hashlib.sha256(cls._canonical_json(commitment_input)).hexdigest()
+
+    def append(self, event_type: str, data: Dict[str, Any], state: Any = None) -> str:
+        state = data if state is None else state
         record = {
             "ts": int(dt.utcnow().timestamp()),
             "event": event_type,
             "data": data,
+            "sequence": self._next_sequence,
+            "parent": self._parent_commitment,
+            "state_version": self.STATE_COMMITMENT_VERSION,
+            "state": state,
         }
-        msg = json.dumps(record, separators=(",", ":"), sort_keys=True).encode()
+        record["state_commitment"] = self._commit_state(
+            record["sequence"], record["parent"], state
+        )
+        msg = self._canonical_json(record)
         record["hmac"] = hmac.new(self.audit_key, msg, hashlib.sha256).hexdigest()
         self.ledger.append(record)
+        self._next_sequence += 1
+        self._parent_commitment = record["state_commitment"]
+        return record["state_commitment"]
 
     def verify_integrity(self) -> bool:
-        for record in self.ledger:
-            stored_hmac = record.pop("hmac", None)
-            msg = json.dumps(record, separators=(",", ":"), sort_keys=True).encode()
-            computed_hmac = hmac.new(self.audit_key, msg, hashlib.sha256).hexdigest()
-            if stored_hmac != computed_hmac:
+        parent = self.GENESIS_COMMITMENT
+        for sequence, record in enumerate(self.ledger):
+            stored_hmac = record.get("hmac")
+            if not isinstance(stored_hmac, str):
                 return False
-            record["hmac"] = stored_hmac
+            unsigned_record = {key: value for key, value in record.items() if key != "hmac"}
+            try:
+                computed_hmac = hmac.new(
+                    self.audit_key, self._canonical_json(unsigned_record), hashlib.sha256
+                ).hexdigest()
+                expected_commitment = self._commit_state(
+                    sequence, parent, record.get("state")
+                )
+            except (TypeError, ValueError, OverflowError):
+                return False
+            if not hmac.compare_digest(stored_hmac, computed_hmac):
+                return False
+            if (
+                record.get("sequence") != sequence
+                or record.get("parent") != parent
+                or record.get("state_version") != self.STATE_COMMITMENT_VERSION
+                or record.get("state_commitment") != expected_commitment
+            ):
+                return False
+            parent = record["state_commitment"]
         return True
 
 
@@ -443,6 +516,57 @@ class FortressUnified:
         else:  # energy
             self.controller = EnergyController(self.config)
 
+    def _state_snapshot(
+        self,
+        payload: Payload,
+        error: float,
+        live_signal: float,
+        controller_result: Dict[str, Any],
+    ) -> Dict[str, Any]:
+        controller_state: Dict[str, Any] = {}
+        for name in (
+            "error_history",
+            "regime",
+            "G",
+            "g_ema",
+            "alpha",
+            "prev_energy",
+            "governance_active",
+            "freeze_counter",
+            "blending_coefficient",
+            "prior_energy",
+            "is_override_engaged",
+            "state_transitions",
+        ):
+            if not hasattr(self.controller, name):
+                continue
+            value = getattr(self.controller, name)
+            if isinstance(value, deque):
+                value = list(value)
+            elif isinstance(value, Enum):
+                value = value.value
+            elif isinstance(value, np.ndarray):
+                value = value.tolist()
+            elif name == "state_transitions":
+                value = [asdict(transition) for transition in value]
+                value = [
+                    {
+                        key: item.isoformat() if isinstance(item, dt) else item
+                        for key, item in transition.items()
+                    }
+                    for transition in value
+                ]
+            controller_state[name] = value
+
+        return {
+            "config": asdict(self.config),
+            "payload": {"body": payload.body, "metadata": payload.metadata},
+            "error": error,
+            "live_signal": live_signal,
+            "controller_result": controller_result,
+            "controller_state": controller_state,
+        }
+
     def process(self, payload: Payload, error: float, live_signal: float) -> Dict[str, Any]:
         """Process request through unified governance kernel."""
 
@@ -453,17 +577,19 @@ class FortressUnified:
         controller_result = self.controller.process(payload, error, live_signal)
 
         # Audit
-        self.audit.append("governance_decision", {
+        state_snapshot = self._state_snapshot(payload, error, live_signal, controller_result)
+        state_commitment = self.audit.append("governance_decision", {
             "error": error,
             "live_signal": live_signal,
             "controller": self.config.controller_mode,
             "result": controller_result
-        })
+        }, state=state_snapshot)
 
         return {
             **controller_result,
             "distortion": integrity_result.get("distortion", 0.0),
-            "integrity": "VERIFIED" if payload.metadata.get("signature") else "UNVERIFIED"
+            "integrity": "VERIFIED" if payload.metadata.get("signature") else "UNVERIFIED",
+            "state_commitment": state_commitment,
         }
 
 
