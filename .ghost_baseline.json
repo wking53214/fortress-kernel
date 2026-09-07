@@ -1,0 +1,50 @@
+[
+  {
+    "category": "duplication",
+    "confidence": null,
+    "detail": "Structural fingerprint match, not textual diff -- this is the 'copy-pasted then renamed' shape specifically. Confirm these are actually solving the same problem before merging; some structural matches are coincidental (e.g. two unrelated simple validators).",
+    "detector": "near_duplicate_function",
+    "disposition": null,
+    "disposition_note": "",
+    "evidence": {
+      "file": "/tmp/claude-1000/-home-wking53214/f7f86960-5cd3-4e63-a084-1fe153210437/scratchpad/ghost_survey/clones/fortress-kernel/test_fortress_unified.py",
+      "line_end": 212,
+      "line_start": 206,
+      "related_files": [
+        "/tmp/claude-1000/-home-wking53214/f7f86960-5cd3-4e63-a084-1fe153210437/scratchpad/ghost_survey/clones/fortress-kernel/test_fortress_unified.py",
+        "/tmp/claude-1000/-home-wking53214/f7f86960-5cd3-4e63-a084-1fe153210437/scratchpad/ghost_survey/clones/fortress-kernel/test_fortress_unified.py",
+        "/tmp/claude-1000/-home-wking53214/f7f86960-5cd3-4e63-a084-1fe153210437/scratchpad/ghost_survey/clones/fortress-kernel/test_fortress_unified.py"
+      ],
+      "snippet": null
+    },
+    "first_seen": "2026-09-03T03:41:19.817332+00:00",
+    "id": "ghost-552e55d1ffb7",
+    "layer": "mechanical",
+    "severity": "major",
+    "status": "suppressed",
+    "summary": "4 functions share identical AST structure (names/literals differ, control flow and shape don't): test_fortress_unified.py:206:test_energy_detection, test_fortress_unified.py:236:test_sage_mode_selection, test_fortress_unified.py:244:test_lyapunov_mode_selection, test_fortress_unified.py:252:test_energy_mode_selection"
+  },
+  {
+    "category": "duplication",
+    "confidence": null,
+    "detail": "Structural fingerprint match within one function, not a whole-function match (near_duplicate_function's detection is blind to this shape). Typical real cause: several branches each hand-build the same kind of object or perform the same sequence of calls -- worth a single shared helper if the branches really are doing the same thing, not just a coincidental resemblance.",
+    "detector": "intra_function_duplicate_block",
+    "disposition": null,
+    "disposition_note": "",
+    "evidence": {
+      "file": "/tmp/claude-1000/-home-wking53214/f7f86960-5cd3-4e63-a084-1fe153210437/scratchpad/ghost_survey/clones/fortress-kernel/fortress_unified.py",
+      "line_end": 382,
+      "line_start": 382,
+      "related_files": [
+        "/tmp/claude-1000/-home-wking53214/f7f86960-5cd3-4e63-a084-1fe153210437/scratchpad/ghost_survey/clones/fortress-kernel/fortress_unified.py:392-392"
+      ],
+      "snippet": null
+    },
+    "first_seen": "2026-09-03T03:41:19.828418+00:00",
+    "id": "ghost-69e8bc25fd0f",
+    "layer": "mechanical",
+    "severity": "minor",
+    "status": "suppressed",
+    "summary": "'process' repeats the same single statement 2 times (lines 382-382, 392-392): same shape, names/literals differ"
+  }
+]
