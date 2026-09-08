@@ -402,9 +402,17 @@ class TestEnergyController(unittest.TestCase):
         controller = EnergyController(config)
         payload = Payload("Normal", {})
 
+        initial = controller.blending_coefficient
         result = controller.process(payload, 2.0, 100.0)
+        # The coefficient must actually be controlled: it moves from its
+        # starting value toward the target, by at most one slew step, and the
+        # result reports the value the controller holds. Bounds alone passed
+        # with the update line removed entirely.
+        self.assertNotEqual(controller.blending_coefficient, initial)
+        self.assertLessEqual(abs(controller.blending_coefficient - initial), config.nominal_slew + 1e-9)
         self.assertGreaterEqual(controller.blending_coefficient, 0.0)
         self.assertLessEqual(controller.blending_coefficient, 1.0)
+        self.assertEqual(result["blending_coefficient"], round(controller.blending_coefficient, 3))
 
 
 class TestFortressUnified(unittest.TestCase):
