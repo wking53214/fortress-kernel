@@ -1,5 +1,20 @@
 # FORTRESS-KERNEL
 
+> **Frozen since 2026-09-08.** fortress-kernel is an optional containment
+> pack for the governed action gate in
+> [observe-perceive](https://github.com/wking53214/observe-perceive), not a
+> product on its own. It bounds the slew and target of an automated actuator
+> and keeps an audit chain of interventions. It passes its own suite with no
+> sibling present (48 tests) and is consumed by the gate only when
+> `fortress_controller` is set.
+>
+> No feature work here for the 90 days starting 2026-09-08. Bug fixes and
+> dependency bumps are fine. It unfreezes when a paying gate customer needs
+> magnitude containment on an action. Why: the gate is the wedge, and this
+> is one of three optional packs behind it. See
+> `docs/audit/COMMERCIAL_RED_TEAM_2026-09-08.md` in observe-perceive,
+> Parts 18 and 35.
+
 ## Deterministic Multi-Mode Control and Integrity Kernel
 
 FORTRESS-KERNEL is a domain-independent control kernel designed to enforce explicit constraints over a protected state while preserving integrity, invariants, drift awareness, mandate continuity, and auditable state transitions.
