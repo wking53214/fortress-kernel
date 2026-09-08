@@ -163,5 +163,30 @@
     "severity": "minor",
     "status": "suppressed",
     "summary": "'test_repeated_identical_transitions_are_reproducible' repeats the same single statement 2 times (lines 197-197, 198-198): same shape, names/literals differ"
+  },
+  {
+    "category": "duplication",
+    "confidence": null,
+    "detail": "Structural fingerprint match, not textual diff -- this is the 'copy-pasted then renamed' shape specifically. Confirm these are actually solving the same problem before merging; some structural matches are coincidental (e.g. two unrelated simple validators).",
+    "detector": "near_duplicate_function",
+    "disposition": null,
+    "disposition_note": "",
+    "evidence": {
+      "file": "/home/wking53214/fortress-kernel/test_fortress_unified.py",
+      "line_end": 378,
+      "line_start": 372,
+      "related_files": [
+        "/home/wking53214/fortress-kernel/test_fortress_unified.py",
+        "/home/wking53214/fortress-kernel/test_fortress_unified.py",
+        "/home/wking53214/fortress-kernel/test_fortress_unified.py"
+      ],
+      "snippet": null
+    },
+    "first_seen": "2026-09-08T03:47:11.021344+00:00",
+    "id": "ghost-88bd88d67920",
+    "layer": "mechanical",
+    "severity": "major",
+    "status": "suppressed",
+    "summary": "4 functions share identical AST structure (names/literals differ, control flow and shape don't): test_fortress_unified.py:372:test_energy_detection, test_fortress_unified.py:411:test_sage_mode_selection, test_fortress_unified.py:419:test_lyapunov_mode_selection, test_fortress_unified.py:427:test_energy_mode_selection"
   }
 ]
