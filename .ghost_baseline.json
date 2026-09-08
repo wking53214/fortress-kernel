@@ -18,7 +18,7 @@
       "snippet": null
     },
     "first_seen": "2026-09-03T03:41:19.817332+00:00",
-    "id": "ghost-552e55d1ffb7",
+    "id": "ghost-6240921c6ad9",
     "layer": "mechanical",
     "severity": "major",
     "status": "suppressed",
@@ -41,10 +41,127 @@
       "snippet": null
     },
     "first_seen": "2026-09-03T03:41:19.828418+00:00",
-    "id": "ghost-69e8bc25fd0f",
+    "id": "ghost-9b908dce14dd",
     "layer": "mechanical",
     "severity": "minor",
     "status": "suppressed",
     "summary": "'process' repeats the same single statement 2 times (lines 382-382, 392-392): same shape, names/literals differ"
+  },
+  {
+    "category": "duplication",
+    "confidence": null,
+    "detail": "Structural fingerprint match, not textual diff -- this is the 'copy-pasted then renamed' shape specifically. Confirm these are actually solving the same problem before merging; some structural matches are coincidental (e.g. two unrelated simple validators).",
+    "detector": "near_duplicate_function",
+    "disposition": null,
+    "disposition_note": "",
+    "evidence": {
+      "file": "/home/wking53214/fortress-kernel/test_fortress_unified.py",
+      "line_end": 352,
+      "line_start": 346,
+      "related_files": [
+        "/home/wking53214/fortress-kernel/test_fortress_unified.py",
+        "/home/wking53214/fortress-kernel/test_fortress_unified.py",
+        "/home/wking53214/fortress-kernel/test_fortress_unified.py"
+      ],
+      "snippet": null
+    },
+    "first_seen": "2026-09-08T03:43:43.560326+00:00",
+    "id": "ghost-b49199981b02",
+    "layer": "mechanical",
+    "severity": "major",
+    "status": "suppressed",
+    "summary": "4 functions share identical AST structure (names/literals differ, control flow and shape don't): test_fortress_unified.py:346:test_energy_detection, test_fortress_unified.py:376:test_sage_mode_selection, test_fortress_unified.py:384:test_lyapunov_mode_selection, test_fortress_unified.py:392:test_energy_mode_selection"
+  },
+  {
+    "category": "duplication",
+    "confidence": null,
+    "detail": "Structural fingerprint match within one function, not a whole-function match (near_duplicate_function's detection is blind to this shape). Typical real cause: several branches each hand-build the same kind of object or perform the same sequence of calls -- worth a single shared helper if the branches really are doing the same thing, not just a coincidental resemblance.",
+    "detector": "intra_function_duplicate_block",
+    "disposition": null,
+    "disposition_note": "",
+    "evidence": {
+      "file": "/home/wking53214/fortress-kernel/fortress_unified.py",
+      "line_end": 477,
+      "line_start": 477,
+      "related_files": [
+        "/home/wking53214/fortress-kernel/fortress_unified.py:487-487"
+      ],
+      "snippet": null
+    },
+    "first_seen": "2026-09-08T03:43:43.573650+00:00",
+    "id": "ghost-9d6d3ab31f48",
+    "layer": "mechanical",
+    "severity": "minor",
+    "status": "suppressed",
+    "summary": "'process' repeats the same single statement 2 times (lines 477-477, 487-487): same shape, names/literals differ"
+  },
+  {
+    "category": "duplication",
+    "confidence": null,
+    "detail": "Structural fingerprint match within one function, not a whole-function match (near_duplicate_function's detection is blind to this shape). Typical real cause: several branches each hand-build the same kind of object or perform the same sequence of calls -- worth a single shared helper if the branches really are doing the same thing, not just a coincidental resemblance.",
+    "detector": "intra_function_duplicate_block",
+    "disposition": null,
+    "disposition_note": "",
+    "evidence": {
+      "file": "/home/wking53214/fortress-kernel/test_fortress_unified.py",
+      "line_end": 132,
+      "line_start": 132,
+      "related_files": [
+        "/home/wking53214/fortress-kernel/test_fortress_unified.py:133-133"
+      ],
+      "snippet": null
+    },
+    "first_seen": "2026-09-08T03:43:43.583034+00:00",
+    "id": "ghost-1d774f8e0a9f",
+    "layer": "mechanical",
+    "severity": "minor",
+    "status": "suppressed",
+    "summary": "'test_state_commitments_chain_records' repeats the same single statement 2 times (lines 132-132, 133-133): same shape, names/literals differ"
+  },
+  {
+    "category": "duplication",
+    "confidence": null,
+    "detail": "Structural fingerprint match within one function, not a whole-function match (near_duplicate_function's detection is blind to this shape). Typical real cause: several branches each hand-build the same kind of object or perform the same sequence of calls -- worth a single shared helper if the branches really are doing the same thing, not just a coincidental resemblance.",
+    "detector": "intra_function_duplicate_block",
+    "disposition": null,
+    "disposition_note": "",
+    "evidence": {
+      "file": "/home/wking53214/fortress-kernel/test_fortress_unified.py",
+      "line_end": 164,
+      "line_start": 164,
+      "related_files": [
+        "/home/wking53214/fortress-kernel/test_fortress_unified.py:167-167"
+      ],
+      "snippet": null
+    },
+    "first_seen": "2026-09-08T03:43:43.583626+00:00",
+    "id": "ghost-847e1a1aa035",
+    "layer": "mechanical",
+    "severity": "minor",
+    "status": "suppressed",
+    "summary": "'test_canonical_state_ignores_mapping_order' repeats the same single statement 2 times (lines 164-164, 167-167): same shape, names/literals differ"
+  },
+  {
+    "category": "duplication",
+    "confidence": null,
+    "detail": "Structural fingerprint match within one function, not a whole-function match (near_duplicate_function's detection is blind to this shape). Typical real cause: several branches each hand-build the same kind of object or perform the same sequence of calls -- worth a single shared helper if the branches really are doing the same thing, not just a coincidental resemblance.",
+    "detector": "intra_function_duplicate_block",
+    "disposition": null,
+    "disposition_note": "",
+    "evidence": {
+      "file": "/home/wking53214/fortress-kernel/test_fortress_unified.py",
+      "line_end": 197,
+      "line_start": 197,
+      "related_files": [
+        "/home/wking53214/fortress-kernel/test_fortress_unified.py:198-198"
+      ],
+      "snippet": null
+    },
+    "first_seen": "2026-09-08T03:43:43.584155+00:00",
+    "id": "ghost-e82b3556448e",
+    "layer": "mechanical",
+    "severity": "minor",
+    "status": "suppressed",
+    "summary": "'test_repeated_identical_transitions_are_reproducible' repeats the same single statement 2 times (lines 197-197, 198-198): same shape, names/literals differ"
   }
 ]
