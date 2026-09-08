@@ -1,6 +1,6 @@
 """Setup for FORTRESS Unified Kernel."""
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 setup(
     name="fortress-kernel",
@@ -9,7 +9,11 @@ setup(
     author="William King",
     author_email="wking53214@gmail.com",
     url="https://github.com/wking53214/fortress-kernel",
-    packages=find_packages(),
+    # The kernel is a single top-level module, not a package directory.
+    # find_packages() found nothing, so `pip install .` produced a wheel with
+    # no Python files in it (measured 2026-09-07); only the numpy dependency
+    # was installed and `import fortress_unified` failed from the wheel.
+    py_modules=["fortress_unified"],
     install_requires=[
         "numpy>=1.24.0",
     ],

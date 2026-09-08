@@ -332,14 +332,40 @@ class TestLyapunovController(unittest.TestCase):
         )
 
     def test_freeze_counter_enforcement(self):
+        # The old version fed a constant error of 20.0 and asserted
+        # freeze_counter >= 0, which is true of a counter that never moves.
+        # Confirmed by mutation: with the freeze assignment replaced by 0 the
+        # test still passed. A constant error has no volatility, so
+        # distortion sat at ~0.5 and governance never engaged at all.
         config = FortressConfig(controller_mode="lyapunov", recovery_freeze_cycles=8)
         controller = LyapunovController(config)
-        payload = Payload("Fail", {})
+        unsigned = Payload("Fail", {})
+        signed = Payload("Calm", {"source_id": "s", "signature": "sig"})
 
-        for _ in range(15):
-            result = controller.process(payload, 20.0, 100.0)
+        # Volatile, unsigned input: governance engages and the freeze is armed.
+        for error in [0.0, 60.0] * 6:
+            controller.process(unsigned, error, 100.0)
+        self.assertTrue(controller.governance_active)
+        self.assertEqual(controller.freeze_counter, 8)
 
-        self.assertGreaterEqual(controller.freeze_counter, 0)
+        # Calm, signed input: distortion falls, governance exits, and the
+        # freeze counts down one cycle at a time with authority held still.
+        seen = []
+        for _ in range(30):
+            alpha_before = controller.alpha
+            controller.process(signed, 0.0, 100.0)
+            if not controller.governance_active:
+                seen.append((controller.freeze_counter, controller.alpha == alpha_before))
+            if not controller.governance_active and controller.freeze_counter == 0:
+                break
+        self.assertTrue(seen, "governance never exited")
+        counters = [c for c, _ in seen]
+        self.assertEqual(counters, list(range(counters[0], -1, -1)),
+                         f"freeze counter did not count down monotonically: {counters}")
+        self.assertEqual(counters[0], 7)
+        # While frozen the slew is zero, so authority must not move.
+        self.assertTrue(all(held for c, held in seen if c > 0),
+                        "authority moved during the recovery freeze")
 
 
 class TestEnergyController(unittest.TestCase):
@@ -352,15 +378,24 @@ class TestEnergyController(unittest.TestCase):
         self.assertEqual(result1["mode"], "NOMINAL")
 
     def test_state_transition_logging(self):
+        # The old version fed a constant error of 25.0 and asserted only
+        # behind `if controller.is_override_engaged`. A constant error has no
+        # volatility, so variance sat at 0.5 (below the 0.55 engagement
+        # threshold), the override never engaged, and the assertion never ran.
+        # Confirmed by deleting the guard: the test failed.
         config = FortressConfig(controller_mode="energy")
         controller = EnergyController(config)
         payload = Payload("Unstable", {})
 
-        for _ in range(8):
-            result = controller.process(payload, 25.0, 100.0)
+        for error in [0.0, 40.0] * 4:
+            result = controller.process(payload, error, 100.0)
 
-        if controller.is_override_engaged:
-            self.assertGreater(len(controller.state_transitions), 0)
+        self.assertTrue(controller.is_override_engaged)
+        self.assertEqual(result["mode"], "OVERRIDE")
+        self.assertGreater(len(controller.state_transitions), 0)
+        first = controller.state_transitions[0]
+        self.assertEqual((first.previous_mode, first.new_mode), ("NOMINAL", "OVERRIDE"))
+        self.assertGreaterEqual(first.trigger_variance, config.state_engagement_threshold)
 
     def test_blending_coefficient_control(self):
         config = FortressConfig(controller_mode="energy")
@@ -465,17 +500,33 @@ class TestIntegration(unittest.TestCase):
         self.assertTrue(fortress.audit.verify_integrity())
 
     def test_guardrails_integration(self):
+        # The old version set violations_found from the test's own literal
+        # inputs (abs(error) > 20.0 for 22, 25, 28 is always True) and then
+        # asserted `violations_found or len(ledger) > 0`, so no change to the
+        # kernel could fail it. Confirmed by mutation: with
+        # InvariantMonitor.check returning [] and the audit ledger's append
+        # made a no-op, the test still passed.
+        #
+        # What can honestly be asserted: the invariant monitor flags each of
+        # these errors as MODEL_FAILURE, and every processed request lands in
+        # the audit ledger with its chain intact. Note for the author:
+        # FortressUnified constructs an InvariantMonitor and never calls it,
+        # so the monitor's verdict does not reach process()'s result -- this
+        # test cannot assert integration that the kernel does not perform.
         config = FortressConfig(controller_mode="lyapunov")
         fortress = FortressUnified(config)
         payload = Payload("Stress", {})
 
-        violations_found = False
         for error in [22.0, 25.0, 28.0]:
             result = fortress.process(payload, error, 100.0)
-            if abs(error) > 20.0:
-                violations_found = True
+            self.assertIn("MODEL_FAILURE", InvariantMonitor.check(
+                state=result["output"], distortion=result["distortion"],
+                error=error, volatility=0.0,
+            ))
+        self.assertEqual(InvariantMonitor.check(state=0.0, distortion=0.0, error=1.0, volatility=0.0), [])
 
-        self.assertTrue(violations_found or len(fortress.audit.ledger) > 0)
+        self.assertEqual(len(fortress.audit.ledger), 3)
+        self.assertTrue(fortress.audit.verify_integrity())
 
 
 if __name__ == "__main__":

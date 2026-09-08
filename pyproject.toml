@@ -15,6 +15,9 @@ dependencies = ["numpy>=1.24.0"]
 [project.optional-dependencies]
 dev = ["pytest>=8"]
 
+[tool.setuptools]
+py-modules = ["fortress_unified"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
