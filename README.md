@@ -1,6 +1,6 @@
 # FORTRESS-KERNEL
 
-> **Frozen since 2026-09-08.** fortress-kernel is an optional containment
+> **Unfrozen 2026-09-11.** fortress-kernel is an optional containment
 > pack for the governed action gate in
 > [observe-perceive](https://github.com/wking53214/observe-perceive), not a
 > product on its own. It bounds the slew and target of an automated actuator
@@ -8,12 +8,20 @@
 > sibling present (48 tests) and is consumed by the gate only when
 > `fortress_controller` is set.
 >
-> No feature work here for the 90 days starting 2026-09-08. Bug fixes and
-> dependency bumps are fine. It unfreezes when a paying gate customer needs
-> magnitude containment on an action. Why: the gate is the wedge, and this
-> is one of three optional packs behind it. See
-> `docs/audit/COMMERCIAL_RED_TEAM_2026-09-08.md` in observe-perceive,
-> Parts 18 and 35.
+> The 90-day freeze set on 2026-09-08 is lifted early, by the owner's
+> decision. It was set on the evidence available that day, which
+> predates two things that change the picture: the private `CNS`
+> package, one measured schema that the library's repositories join
+> on rather than re-typing, and `ghost_tools`' kernel scan, which
+> measures duplication and drift against it. Neither existed when the
+> freeze was written.
+>
+> The commercial reading above is **not** superseded. Everything the
+> audit established about this repo still holds, including anything it
+> says is missing; lifting the freeze removes a restriction on effort,
+> not a finding. See
+> `docs/audit/COMMERCIAL_RED_TEAM_2026-09-08.md` in observe-perceive, Parts 18 and 35,
+> for what the freeze was based on.
 
 ## Deterministic Multi-Mode Control and Integrity Kernel
 
