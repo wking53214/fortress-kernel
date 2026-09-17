@@ -1,0 +1,78 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor pyproject.toml claims (requires-python = ">=3.9") is
+        # tested, not just asserted. A claimed floor nobody runs is a claim.
+        python-version: ["3.9", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+      - name: Collected test count is not zero
+        # The defect this job exists to make impossible. Until 2026-09-17
+        # pyproject.toml set `testpaths = ["tests"]` and there is no tests/
+        # directory: pytest collects nothing and exits 0, and a green check
+        # for zero tests looks exactly like a green check for all of them.
+        # `--collect-only -q` exits 5 on an empty collection, so this step
+        # fails before the suite gets a chance to pass vacuously.
+        run: python -m pytest --collect-only -q
+      - name: Tests
+        run: python -m pytest -q
+
+  wheel:
+    # A wheel is what pip actually installs, and it is the only artifact
+    # that can be wrong in a way nothing else here sees. Measured
+    # 2026-09-07: find_packages() found nothing in this single-module
+    # project, so `pip install .` produced a wheel with no Python files in
+    # it. Everything else passed. The import failed for whoever installed
+    # it next, which was not the person who broke it.
+    #
+    # So this job does not trust the build's exit code. It installs the
+    # wheel it just built into a clean environment, with the repository
+    # deliberately out of the way, and imports the module. On a wheel with
+    # no code in it, that import is the step that fails.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel --outdir dist/
+      - name: Install the wheel and import from it, outside the checkout
+        # One step, and `working-directory` rather than a `cd`: each `run:`
+        # block starts in the checkout, so a `cd /tmp` in an earlier step
+        # does not carry into a later one. Split across two steps, the
+        # assertion below ran from the repository, `import fortress_unified`
+        # found the source file sitting next to it, and the job failed --
+        # correctly, for the exact reason it exists to detect, and for a
+        # reason that was the workflow's fault rather than the wheel's.
+        #
+        # Being outside the checkout is the whole point. Run from inside it,
+        # this passes whatever the wheel contains, including nothing.
+        working-directory: /tmp
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/python -m pip install --quiet "$GITHUB_WORKSPACE"/dist/*.whl
+          /tmp/clean/bin/python -c "
+          import fortress_unified, pathlib
+          where = pathlib.Path(fortress_unified.__file__).resolve()
+          assert 'site-packages' in where.parts, where
+          print('imported from the installed wheel:', where)
+          "
