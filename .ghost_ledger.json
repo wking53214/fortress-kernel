@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "totals": {
-    "runs": 5
+    "runs": 7
   },
   "runs": [
     {
@@ -153,6 +153,66 @@
         "found_remembered": 3,
         "scanned": 5
       }
+    },
+    {
+      "run_id": "2026-09-17T20:21:45+00:00:38b4c22abfec",
+      "at": "2026-09-17T20:21:45+00:00",
+      "commit": "38b4c22abfec4e8fedb139516922a148bbef4f03",
+      "tool_version": "1.8.0",
+      "checks": {
+        "structural": "ran",
+        "mutate": "ran",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "ran",
+        "tests": "ran",
+        "project": "ran",
+        "secrets": "ran",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "2eec665d0ab1a7b4",
+        "casefile": "7efab05e6e505f5e"
+      },
+      "link": "7aec5a5273c62d09",
+      "counts": {
+        "found": 2,
+        "primary": 2,
+        "found_remembered": 2,
+        "scanned": 4
+      }
+    },
+    {
+      "run_id": "2026-09-17T20:21:51+00:00:38b4c22abfec",
+      "at": "2026-09-17T20:21:51+00:00",
+      "commit": "38b4c22abfec4e8fedb139516922a148bbef4f03",
+      "tool_version": "1.8.0",
+      "checks": {
+        "structural": "ran",
+        "mutate": "not_run",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "ran",
+        "tests": "ran",
+        "project": "ran",
+        "secrets": "ran",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "2eec665d0ab1a7b4",
+        "casefile": "7efab05e6e505f5e"
+      },
+      "link": "dc29db4b2b4070cc",
+      "counts": {
+        "found": 2,
+        "primary": 2,
+        "found_remembered": 2,
+        "scanned": 4
+      }
     }
   ],
   "findings": {
@@ -167,7 +227,23 @@
       "last_seen": "2026-09-17T20:01:24+00:00",
       "last_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
       "runs_seen": 5,
-      "consecutive": 5,
+      "consecutive": 0,
+      "returns": 0,
+      "absent_last_run": true,
+      "dispositions": []
+    },
+    "ghost-669822c5cf99": {
+      "detector": "unmerged_branch",
+      "file": ".git/refs/heads/claude/ghost-tools-fortress-kernel-mkjex0",
+      "summary": "branch 'claude/ghost-tools-fortress-kernel-mkjex0' has commits not reflected in 'origin/Main'",
+      "renamed_from": "",
+      "severity": "major",
+      "first_seen": "2026-09-17T20:21:45+00:00",
+      "first_commit": "38b4c22abfec4e8fedb139516922a148bbef4f03",
+      "last_seen": "2026-09-17T20:21:51+00:00",
+      "last_commit": "38b4c22abfec4e8fedb139516922a148bbef4f03",
+      "runs_seen": 2,
+      "consecutive": 2,
       "returns": 0,
       "absent_last_run": false,
       "dispositions": []
@@ -180,10 +256,10 @@
       "severity": "minor",
       "first_seen": "2026-09-17T19:54:43+00:00",
       "first_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
-      "last_seen": "2026-09-17T20:01:24+00:00",
-      "last_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
-      "runs_seen": 5,
-      "consecutive": 5,
+      "last_seen": "2026-09-17T20:21:51+00:00",
+      "last_commit": "38b4c22abfec4e8fedb139516922a148bbef4f03",
+      "runs_seen": 7,
+      "consecutive": 7,
       "returns": 0,
       "absent_last_run": false,
       "dispositions": []
@@ -199,9 +275,9 @@
       "last_seen": "2026-09-17T20:01:24+00:00",
       "last_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
       "runs_seen": 5,
-      "consecutive": 5,
+      "consecutive": 0,
       "returns": 0,
-      "absent_last_run": false,
+      "absent_last_run": true,
       "dispositions": []
     }
   }
