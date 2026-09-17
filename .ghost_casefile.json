@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "detector": "intra_function_duplicate_block",
+      "shape": "intra_function_duplicate_block",
+      "outcome": "real",
+      "note": "Real but small. The two FortressStateTransition appends in process() differ only in direction (NOMINAL->OVERRIDE, OVERRIDE->NOMINAL). Left visible rather than suppressed.",
+      "when": "2026-09-17T20:00:58.681831+00:00",
+      "finding_id": "ghost-9d6d3ab31f48",
+      "file": "fortress_unified.py",
+      "decision": "fix"
+    },
+    {
+      "detector": "structure",
+      "shape": "structure|distribution=setuptools&imported_by=setup&kind=undeclared dependency&package=setuptools",
+      "outcome": "false",
+      "note": "False positive. setuptools is declared in [build-system].requires (\"setuptools>=68\"), which is the correct place for a build-time import: setup.py runs inside the isolated build environment a PEP 517 frontend creates from that list. ghost_buster reads only project.dependencies, project.optional-dependencies and requirements.txt, so it cannot see the declaration.",
+      "when": "2026-09-17T20:00:58.681843+00:00",
+      "finding_id": "ghost-4bc8a0d972be",
+      "file": "pyproject.toml",
+      "decision": "suppress"
+    },
+    {
+      "detector": "no_ci_configuration",
+      "shape": "no_ci_configuration|kind=tests nobody runs&test_files=1",
+      "outcome": "real",
+      "note": "Real. 48 tests exist and nothing runs them on a push. Left out of the baseline on purpose so it is reported on every run until a workflow exists.",
+      "when": "2026-09-17T20:00:58.681849+00:00",
+      "finding_id": "ghost-d92908f313a5",
+      "file": "user/fortress-kernel",
+      "decision": "fix"
+    }
+  ]
+}

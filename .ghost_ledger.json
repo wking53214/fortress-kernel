@@ -1,0 +1,208 @@
+{
+  "schema": 1,
+  "totals": {
+    "runs": 5
+  },
+  "runs": [
+    {
+      "run_id": "2026-09-17T19:54:43+00:00:6732b3bba05b",
+      "at": "2026-09-17T19:54:43+00:00",
+      "commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "tool_version": "1.7.8",
+      "checks": {
+        "structural": "ran",
+        "mutate": "not_run",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "could_not_run",
+        "tests": "declined",
+        "project": "ran",
+        "secrets": "could_not_run",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "2656404b77fba78b",
+        "casefile": "absent"
+      },
+      "link": "bce81b2e9cabaa18",
+      "counts": {
+        "found": 3,
+        "primary": 3,
+        "found_remembered": 3,
+        "scanned": 5
+      }
+    },
+    {
+      "run_id": "2026-09-17T19:56:45+00:00:6732b3bba05b",
+      "at": "2026-09-17T19:56:45+00:00",
+      "commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "tool_version": "1.7.8",
+      "checks": {
+        "structural": "ran",
+        "mutate": "not_run",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "ran",
+        "tests": "declined",
+        "project": "ran",
+        "secrets": "ran",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "2656404b77fba78b",
+        "casefile": "absent"
+      },
+      "link": "117de0eecbbd9b1d",
+      "counts": {
+        "found": 3,
+        "primary": 3,
+        "found_remembered": 3,
+        "scanned": 5
+      }
+    },
+    {
+      "run_id": "2026-09-17T19:57:48+00:00:6732b3bba05b",
+      "at": "2026-09-17T19:57:48+00:00",
+      "commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "tool_version": "1.7.8",
+      "checks": {
+        "structural": "ran",
+        "mutate": "not_run",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "ran",
+        "tests": "declined",
+        "project": "ran",
+        "secrets": "ran",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "2656404b77fba78b",
+        "casefile": "absent"
+      },
+      "link": "2052368e071cac53",
+      "counts": {
+        "found": 3,
+        "primary": 3,
+        "found_remembered": 3,
+        "scanned": 5
+      }
+    },
+    {
+      "run_id": "2026-09-17T20:00:04+00:00:6732b3bba05b",
+      "at": "2026-09-17T20:00:04+00:00",
+      "commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "tool_version": "1.7.8",
+      "checks": {
+        "structural": "ran",
+        "mutate": "ran",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "ran",
+        "tests": "ran",
+        "project": "ran",
+        "secrets": "ran",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "2656404b77fba78b",
+        "casefile": "absent"
+      },
+      "link": "2be39bb6afae3686",
+      "counts": {
+        "found": 3,
+        "primary": 3,
+        "found_remembered": 3,
+        "scanned": 5
+      }
+    },
+    {
+      "run_id": "2026-09-17T20:01:24+00:00:6732b3bba05b",
+      "at": "2026-09-17T20:01:24+00:00",
+      "commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "tool_version": "1.7.8",
+      "checks": {
+        "structural": "ran",
+        "mutate": "ran",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "ran",
+        "tests": "ran",
+        "project": "ran",
+        "secrets": "ran",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "2eec665d0ab1a7b4",
+        "casefile": "7efab05e6e505f5e"
+      },
+      "link": "1dd487434d964286",
+      "counts": {
+        "found": 3,
+        "primary": 3,
+        "found_remembered": 3,
+        "scanned": 5
+      }
+    }
+  ],
+  "findings": {
+    "ghost-4bc8a0d972be": {
+      "detector": "structure",
+      "file": "pyproject.toml",
+      "summary": "undeclared dependency: 'setuptools' (distribution 'setuptools') is imported by 1 module(s) and appears in no dependency declaration",
+      "renamed_from": "",
+      "severity": "major",
+      "first_seen": "2026-09-17T19:54:43+00:00",
+      "first_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "last_seen": "2026-09-17T20:01:24+00:00",
+      "last_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "runs_seen": 5,
+      "consecutive": 5,
+      "returns": 0,
+      "absent_last_run": false,
+      "dispositions": []
+    },
+    "ghost-9d6d3ab31f48": {
+      "detector": "intra_function_duplicate_block",
+      "file": "fortress_unified.py",
+      "summary": "'process' repeats the same single statement 2 times (lines 477-477, 487-487): same shape, names/literals differ",
+      "renamed_from": "",
+      "severity": "minor",
+      "first_seen": "2026-09-17T19:54:43+00:00",
+      "first_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "last_seen": "2026-09-17T20:01:24+00:00",
+      "last_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "runs_seen": 5,
+      "consecutive": 5,
+      "returns": 0,
+      "absent_last_run": false,
+      "dispositions": []
+    },
+    "ghost-d92908f313a5": {
+      "detector": "no_ci_configuration",
+      "file": "user/fortress-kernel",
+      "summary": "tests nobody runs: 1 test file(s) exist and no CI configuration runs them",
+      "renamed_from": "",
+      "severity": "minor",
+      "first_seen": "2026-09-17T19:54:43+00:00",
+      "first_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "last_seen": "2026-09-17T20:01:24+00:00",
+      "last_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
+      "runs_seen": 5,
+      "consecutive": 5,
+      "returns": 0,
+      "absent_last_run": false,
+      "dispositions": []
+    }
+  }
+}
