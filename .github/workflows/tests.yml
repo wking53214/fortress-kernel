@@ -56,18 +56,22 @@ jobs:
           python -m pip install --upgrade pip build
           python -m build --wheel --outdir dist/
       - name: Install the wheel and import from it, outside the checkout
+        # One step, and `working-directory` rather than a `cd`: each `run:`
+        # block starts in the checkout, so a `cd /tmp` in an earlier step
+        # does not carry into a later one. Split across two steps, the
+        # assertion below ran from the repository, `import fortress_unified`
+        # found the source file sitting next to it, and the job failed --
+        # correctly, for the exact reason it exists to detect, and for a
+        # reason that was the workflow's fault rather than the wheel's.
+        #
+        # Being outside the checkout is the whole point. Run from inside it,
+        # this passes whatever the wheel contains, including nothing.
+        working-directory: /tmp
         run: |
           python -m venv /tmp/clean
-          /tmp/clean/bin/python -m pip install --quiet dist/*.whl
-          cd /tmp
-          /tmp/clean/bin/python -c "import fortress_unified; print(fortress_unified.__file__)"
-      - name: The installed module is the one from the wheel
-        # `cd /tmp` above is what makes the import meaningful: run from the
-        # checkout, `import fortress_unified` finds the source file sitting
-        # next to it and passes whatever the wheel contains.
-        run: |
+          /tmp/clean/bin/python -m pip install --quiet "$GITHUB_WORKSPACE"/dist/*.whl
           /tmp/clean/bin/python -c "
-          import fortress_unified, pathlib, sys
+          import fortress_unified, pathlib
           where = pathlib.Path(fortress_unified.__file__).resolve()
           assert 'site-packages' in where.parts, where
           print('imported from the installed wheel:', where)
