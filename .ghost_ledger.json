@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "totals": {
-    "runs": 7
+    "runs": 8
   },
   "runs": [
     {
@@ -213,6 +213,36 @@
         "found_remembered": 2,
         "scanned": 4
       }
+    },
+    {
+      "run_id": "2026-09-17T20:35:13+00:00:31e51aacebc2",
+      "at": "2026-09-17T20:35:13+00:00",
+      "commit": "31e51aacebc2d9ecd867dd88811a487bb20dbacd",
+      "tool_version": "1.8.0",
+      "checks": {
+        "structural": "ran",
+        "mutate": "not_run",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "ran",
+        "tests": "ran",
+        "project": "ran",
+        "secrets": "ran",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "4f53cda18c2baa0c",
+        "casefile": "7efab05e6e505f5e"
+      },
+      "link": "1ebfd3b03bd798d6",
+      "counts": {
+        "found": 2,
+        "primary": 2,
+        "found_remembered": 2,
+        "scanned": 4
+      }
     }
   ],
   "findings": {
@@ -240,10 +270,10 @@
       "severity": "major",
       "first_seen": "2026-09-17T20:21:45+00:00",
       "first_commit": "38b4c22abfec4e8fedb139516922a148bbef4f03",
-      "last_seen": "2026-09-17T20:21:51+00:00",
-      "last_commit": "38b4c22abfec4e8fedb139516922a148bbef4f03",
-      "runs_seen": 2,
-      "consecutive": 2,
+      "last_seen": "2026-09-17T20:35:13+00:00",
+      "last_commit": "31e51aacebc2d9ecd867dd88811a487bb20dbacd",
+      "runs_seen": 3,
+      "consecutive": 3,
       "returns": 0,
       "absent_last_run": false,
       "dispositions": []
@@ -256,10 +286,10 @@
       "severity": "minor",
       "first_seen": "2026-09-17T19:54:43+00:00",
       "first_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
-      "last_seen": "2026-09-17T20:21:51+00:00",
-      "last_commit": "38b4c22abfec4e8fedb139516922a148bbef4f03",
-      "runs_seen": 7,
-      "consecutive": 7,
+      "last_seen": "2026-09-17T20:35:13+00:00",
+      "last_commit": "31e51aacebc2d9ecd867dd88811a487bb20dbacd",
+      "runs_seen": 8,
+      "consecutive": 8,
       "returns": 0,
       "absent_last_run": false,
       "dispositions": []

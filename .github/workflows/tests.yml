@@ -32,3 +32,43 @@ jobs:
         run: python -m pytest --collect-only -q
       - name: Tests
         run: python -m pytest -q
+
+  wheel:
+    # A wheel is what pip actually installs, and it is the only artifact
+    # that can be wrong in a way nothing else here sees. Measured
+    # 2026-09-07: find_packages() found nothing in this single-module
+    # project, so `pip install .` produced a wheel with no Python files in
+    # it. Everything else passed. The import failed for whoever installed
+    # it next, which was not the person who broke it.
+    #
+    # So this job does not trust the build's exit code. It installs the
+    # wheel it just built into a clean environment, with the repository
+    # deliberately out of the way, and imports the module. On a wheel with
+    # no code in it, that import is the step that fails.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Build
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel --outdir dist/
+      - name: Install the wheel and import from it, outside the checkout
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/python -m pip install --quiet dist/*.whl
+          cd /tmp
+          /tmp/clean/bin/python -c "import fortress_unified; print(fortress_unified.__file__)"
+      - name: The installed module is the one from the wheel
+        # `cd /tmp` above is what makes the import meaningful: run from the
+        # checkout, `import fortress_unified` finds the source file sitting
+        # next to it and passes whatever the wheel contains.
+        run: |
+          /tmp/clean/bin/python -c "
+          import fortress_unified, pathlib, sys
+          where = pathlib.Path(fortress_unified.__file__).resolve()
+          assert 'site-packages' in where.parts, where
+          print('imported from the installed wheel:', where)
+          "
