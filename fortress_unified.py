@@ -456,6 +456,18 @@ class EnergyController(Controller):
         self.is_override_engaged = False
         self.state_transitions: List[FortressStateTransition] = []
 
+    def _log_state_transition(self, previous_mode: str, new_mode: str, variance: float, energy_delta: float, reason: str) -> FortressStateTransition:
+        transition = FortressStateTransition(
+            timestamp=dt.utcnow(),
+            previous_mode=previous_mode,
+            new_mode=new_mode,
+            trigger_variance=variance,
+            trigger_energy_delta=energy_delta,
+            reason=reason
+        )
+        self.state_transitions.append(transition)
+        return transition
+
     def process(self, payload: Payload, error: float, live_signal: float) -> Dict[str, Any]:
         self.error_history.append(abs(error))
         volatility = float(np.std(list(self.error_history))) if len(self.error_history) > 1 else 0.0
@@ -474,24 +486,12 @@ class EnergyController(Controller):
 
         if not self.is_override_engaged and variance >= self.config.state_engagement_threshold:
             self.is_override_engaged = True
-            self.state_transitions.append(FortressStateTransition(
-                timestamp=dt.utcnow(),
-                previous_mode="NOMINAL",
-                new_mode="OVERRIDE",
-                trigger_variance=variance,
-                trigger_energy_delta=energy_delta,
-                reason=f"Variance {variance:.3f} exceeded threshold"
-            ))
+            self._log_state_transition("NOMINAL", "OVERRIDE", variance, energy_delta,
+                                       f"Variance {variance:.3f} exceeded threshold")
         elif self.is_override_engaged and variance <= self.config.state_disengagement_threshold:
             self.is_override_engaged = False
-            self.state_transitions.append(FortressStateTransition(
-                timestamp=dt.utcnow(),
-                previous_mode="OVERRIDE",
-                new_mode="NOMINAL",
-                trigger_variance=variance,
-                trigger_energy_delta=energy_delta,
-                reason=f"Variance {variance:.3f} fell below threshold"
-            ))
+            self._log_state_transition("OVERRIDE", "NOMINAL", variance, energy_delta,
+                                       f"Variance {variance:.3f} fell below threshold")
 
         target_coeff = 1.0 / (1.0 + math.exp(self.config.sensitivity * (variance - self.config.state_engagement_threshold)))
 
