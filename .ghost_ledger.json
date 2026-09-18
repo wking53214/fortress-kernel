@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "totals": {
-    "runs": 8
+    "runs": 9
   },
   "runs": [
     {
@@ -243,6 +243,36 @@
         "found_remembered": 2,
         "scanned": 4
       }
+    },
+    {
+      "run_id": "2026-09-18T11:18:17+00:00:669fa0efc2b8",
+      "at": "2026-09-18T11:18:17+00:00",
+      "commit": "669fa0efc2b84c200e9377508cb05766321d60cf",
+      "tool_version": "1.9.1",
+      "checks": {
+        "structural": "ran",
+        "mutate": "not_run",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "could_not_run",
+        "tests": "ran",
+        "project": "ran",
+        "secrets": "ran",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "4f53cda18c2baa0c",
+        "casefile": "7efab05e6e505f5e"
+      },
+      "link": "882528272592a7bd",
+      "counts": {
+        "found": 1,
+        "primary": 1,
+        "found_remembered": 1,
+        "scanned": 4
+      }
     }
   ],
   "findings": {
@@ -273,9 +303,9 @@
       "last_seen": "2026-09-17T20:35:13+00:00",
       "last_commit": "31e51aacebc2d9ecd867dd88811a487bb20dbacd",
       "runs_seen": 3,
-      "consecutive": 3,
+      "consecutive": 0,
       "returns": 0,
-      "absent_last_run": false,
+      "absent_last_run": true,
       "dispositions": []
     },
     "ghost-9d6d3ab31f48": {
@@ -286,10 +316,10 @@
       "severity": "minor",
       "first_seen": "2026-09-17T19:54:43+00:00",
       "first_commit": "6732b3bba05bfd0679173346259a872cceeee5cd",
-      "last_seen": "2026-09-17T20:35:13+00:00",
-      "last_commit": "31e51aacebc2d9ecd867dd88811a487bb20dbacd",
-      "runs_seen": 8,
-      "consecutive": 8,
+      "last_seen": "2026-09-18T11:18:17+00:00",
+      "last_commit": "669fa0efc2b84c200e9377508cb05766321d60cf",
+      "runs_seen": 9,
+      "consecutive": 9,
       "returns": 0,
       "absent_last_run": false,
       "dispositions": []
