@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "totals": {
-    "runs": 9
+    "runs": 10
   },
   "runs": [
     {
@@ -273,6 +273,36 @@
         "found_remembered": 1,
         "scanned": 4
       }
+    },
+    {
+      "run_id": "2026-09-18T11:21:43+00:00:07dc54ed878e",
+      "at": "2026-09-18T11:21:43+00:00",
+      "commit": "07dc54ed878e44d14a109f197d2cada4bf0dc3dd",
+      "tool_version": "1.9.1",
+      "checks": {
+        "structural": "ran",
+        "mutate": "not_run",
+        "kernel": "not_run",
+        "boundary": "not_run",
+        "structure": "ran",
+        "branches": "could_not_run",
+        "tests": "ran",
+        "project": "ran",
+        "secrets": "ran",
+        "correlate": "ran",
+        "ledger": "ran"
+      },
+      "records": {
+        "baseline": "4f53cda18c2baa0c",
+        "casefile": "7efab05e6e505f5e"
+      },
+      "link": "57037c753b32c944",
+      "counts": {
+        "found": 1,
+        "primary": 1,
+        "found_remembered": 1,
+        "scanned": 4
+      }
     }
   ],
   "findings": {
@@ -308,6 +338,22 @@
       "absent_last_run": true,
       "dispositions": []
     },
+    "ghost-6a30decb98e6": {
+      "detector": "intra_function_duplicate_block",
+      "file": "fortress_unified.py",
+      "summary": "'process' repeats the same single statement 2 times (lines 489-489, 493-493): same shape, names/literals differ",
+      "renamed_from": "",
+      "severity": "minor",
+      "first_seen": "2026-09-18T11:21:43+00:00",
+      "first_commit": "07dc54ed878e44d14a109f197d2cada4bf0dc3dd",
+      "last_seen": "2026-09-18T11:21:43+00:00",
+      "last_commit": "07dc54ed878e44d14a109f197d2cada4bf0dc3dd",
+      "runs_seen": 1,
+      "consecutive": 1,
+      "returns": 0,
+      "absent_last_run": false,
+      "dispositions": []
+    },
     "ghost-9d6d3ab31f48": {
       "detector": "intra_function_duplicate_block",
       "file": "fortress_unified.py",
@@ -319,9 +365,9 @@
       "last_seen": "2026-09-18T11:18:17+00:00",
       "last_commit": "669fa0efc2b84c200e9377508cb05766321d60cf",
       "runs_seen": 9,
-      "consecutive": 9,
+      "consecutive": 0,
       "returns": 0,
-      "absent_last_run": false,
+      "absent_last_run": true,
       "dispositions": []
     },
     "ghost-d92908f313a5": {
