@@ -302,6 +302,11 @@ creating a logical chain across transitions. The existing HMAC remains the mecha
 for authenticating audit records; the commitment is an identifier and tamper-evident
 link, not encryption, non-repudiation, or protection against a compromised audit key.
 
+The HMAC key comes from the `audit_key` argument or the `FORTRESS_AUDIT_KEY` environment
+variable. With neither set, the ledger signs with a random key held only by the current
+process and logs a warning: tampering is still detected in-process, but the records cannot
+be verified anywhere else. There is no built-in default key.
+
 An optional `OscillationDetector` can report repeated normalized controller-result
 observations across a kernel instance. It is resettable and instance-scoped, and its
 signal is advisory: repeated output is not necessarily mathematical oscillation and
