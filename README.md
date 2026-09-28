@@ -1,54 +1,43 @@
-# FORTRESS-KERNEL
+# fortress-kernel
 
-**Role in the governed action stack:** OPTIONAL containment pack for [observe-perceive](https://github.com/wking53214/observe-perceive) — bounds actuator slew/target and audit chain of interventions. Not a standalone product. Distinct from [AUGUR](https://github.com/wking53214/AUGUR) (veto-only simulation screen).
+Optional **containment pack** for the governed action gate: unified control (SAGE-K / Lyapunov / Energy) with bounded slew. **Default branch: `Main`** (capital M). numpy required.
+
+## 1. Pipeline Position & Role
+
+**OPTIONAL CONTAINMENT** after/beside PERCEIVE, before or around execution. Wired from [`observe-perceive`](https://github.com/wking53214/observe-perceive) extra `fortress` (`fortress_perceive_adapter.py`). Not a standalone product. Distinct from AUGUR (veto simulation).
+
+## 2. Full System Scope & Architectural Depth
+
+`fortress_unified.py` merges three strategies behind `FortressConfig.controller_mode`: `"sage"` | `"lyapunov"` | `"energy"` (default energy).
+
+Uncalibrated / hardcoded tunables (honest list, not exhaustive): `activation_threshold=0.45`, `authority_enter_threshold=0.55`, `authority_exit_threshold=0.35`, `nominal_slew=0.20`, `sensitivity=15.0`, `max_contraction_ratio=0.98`, `fim_beta=0.90`, `recovery_freeze_cycles=8`, `prov_risk_no_sig=0.5`, divergence caps `0.45` / scale `25.0`, buffer lengths 10/16, `rng_seed=42`.
+
+HMAC appears in the unified kernel; numpy state vectors are the actual control substrate.
+
+## 3. What It Does NOT Do / Non-Goals
+
+- Does not approve policy or issue grants.
+- Does not simulate futures (AUGUR).
+- Docstrings mentioning ESN/Lyapunov in **VANGUARD** are not this code; do not confuse the retired VANGUARD files with this package.
+
+## 4. Brutally Honest Current Status & Gaps
+
+Commercial red team: **FEATURE** (a well-made guard, not a market). Easy to rebuild per actuator. 48 tests. Unfrozen 2026-09-11. Thresholds are engineering guesses, not fitted controllers. Branch name `Main` breaks naive `git clone -b main`.
+
+## 5. Core Invariants & Guarantees
+
+Bounded slew/target when the controller is actually invoked. Audit chain of interventions inside the module. Fail-closed only if the adapter treats containment refusal as halt — that is observe-perceive's job.
+
+## 6. Inputs, Outputs & Type Contracts
+
+`FortressConfig` + unified orchestrator in `fortress_unified.py`. Pin: `fortress-kernel @ git+…@4105ccb5`.
+
+## 7. Stack Integration Topology
 
 ```text
-Live path: Admission → OBSERVE/Keys → Locks → PERCEIVE → Decision → Conservation → Execution → Custody
-Optional: AUGUR · fortress-kernel · CCC
+observe-perceive extra `fortress` → fortress_perceive_adapter → fortress_unified
+AUGUR is NOT this repo
+VANGUARD is retired specimens in TOUCHSTONE
 ```
 
----
-
-> **Unfrozen 2026-09-11.** fortress-kernel is an optional containment
-> pack for the governed action gate in
-> [observe-perceive](https://github.com/wking53214/observe-perceive), not a
-> product on its own. It bounds the slew and target of an automated actuator
-> and keeps an audit chain of interventions. It passes its own suite with no
-> sibling present (48 tests) and is consumed by the gate only when
-> `fortress_controller` is set.
->
-> The 90-day freeze set on 2026-09-08 is lifted early, by the owner's
-> decision. It was set on the evidence available that day, which
-> predates two things that change the picture: the private `CNS`
-> package, one measured schema that the library's repositories join
-> on rather than re-typing, and `ghost_tools`' kernel scan, which
-> measures duplication and drift against it. Neither existed when the
-> freeze was written.
->
-> The commercial reading above is **not** superseded. Everything the
-> audit established about this repo still holds, including anything it
-> says is missing; lifting the freeze removes a restriction on effort,
-> not a finding. See
-> `docs/audit/COMMERCIAL_RED_TEAM_2026-09-08.md` in observe-perceive, Parts 18 and 35,
-> for what the freeze was based on.
-
-## Deterministic Multi-Mode Control and Integrity Kernel
-
-FORTRESS-KERNEL is a domain-independent control kernel designed to enforce explicit constraints over a protected state while preserving integrity, invariants, drift awareness, mandate continuity, and auditable state transitions.
-
-The current implementation demonstrates these capabilities through a unified kernel that combines multiple control strategies behind a common interface.
-
-The current implementation is a representative example of how the kernel functions. It does not define the architectural limits or intended application domain of FORTRESS-KERNEL.
-
-See the remainder of this document for control modes, integrity, invariants, drift, mandate, auditability, and design principles.
-
-## Install and test
-
-```bash
-pip install -e ".[test]"
-pytest
-```
-
-## Central proposition
-
-> A protected system state should not be changed merely because an operation is technically possible. A control kernel can establish the conditions under which state may change, evaluate those conditions through multiple control strategies, preserve integrity and invariants, account for mandate and drift, and produce an auditable result.
+Apache-2.0.
