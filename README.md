@@ -40,4 +40,4 @@ AUGUR is NOT this repo
 VANGUARD is retired specimens in TOUCHSTONE
 ```
 
-Apache-2.0.
+Proprietary. Copyright (c) 2026 William King. All rights reserved. See LICENSE.
