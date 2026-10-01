@@ -26,13 +26,24 @@ Homepage = "https://github.com/wking53214/fortress-kernel"
 
 [project.optional-dependencies]
 dev = ["pytest>=8"]
+# Optional: lets the kernel's verdicts be expressed as CNS gate results. The
+# kernel imports nothing from CNS unless fortress_cns_connector is used, and
+# its suite passes without it. Pinned to tag v1.4.0. CNS itself needs Python
+# 3.10 or newer, so on 3.9 this extra cannot be installed.
+cns = [
+    "cns @ git+https://github.com/wking53214/cns.git@3b465dbcc1a6a4ab6f1040f93d44483196abd737",
+]
 
 [tool.setuptools]
 # The kernel is a single top-level module, not a package directory.
 # find_packages() found nothing, so `pip install .` produced a wheel with
 # no Python files in it (measured 2026-09-07); only the numpy dependency
 # was installed and `import fortress_unified` failed from the wheel.
-py-modules = ["fortress_unified"]
+#
+# fortress_cns_connector is the optional CNS connector, a second top-level
+# module. A module missing from this list is silently left out of the wheel,
+# which is the defect above, so it is listed even though it is optional.
+py-modules = ["fortress_unified", "fortress_cns_connector"]
 
 # NOTE: there is deliberately no [tool.pytest.ini_options] testpaths here.
 # It used to say `testpaths = ["tests"]` and there is no tests/ directory:

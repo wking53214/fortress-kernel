@@ -1,600 +1,93 @@
-# FORTRESS-KERNEL
+# fortress-kernel
 
-> **Unfrozen 2026-09-11.** fortress-kernel is an optional containment
-> pack for the governed action gate in
-> [observe-perceive](https://github.com/wking53214/observe-perceive), not a
-> product on its own. It bounds the slew and target of an automated actuator
-> and keeps an audit chain of interventions. It passes its own suite with no
-> sibling present (48 tests) and is consumed by the gate only when
-> `fortress_controller` is set.
->
-> The 90-day freeze set on 2026-09-08 is lifted early, by the owner's
-> decision. It was set on the evidence available that day, which
-> predates two things that change the picture: the private `CNS`
-> package, one measured schema that the library's repositories join
-> on rather than re-typing, and `ghost_tools`' kernel scan, which
-> measures duplication and drift against it. Neither existed when the
-> freeze was written.
->
-> The commercial reading above is **not** superseded. Everything the
-> audit established about this repo still holds, including anything it
-> says is missing; lifting the freeze removes a restriction on effort,
-> not a finding. See
-> `docs/audit/COMMERCIAL_RED_TEAM_2026-09-08.md` in observe-perceive, Parts 18 and 35,
-> for what the freeze was based on.
+Optional **containment pack** for the governed action gate: unified control (SAGE-K / Lyapunov / Energy) with bounded slew. **Default branch: `Main`** (capital M). numpy required.
 
-## Deterministic Multi-Mode Control and Integrity Kernel
+## 1. Pipeline Position & Role
 
-FORTRESS-KERNEL is a domain-independent control kernel designed to enforce explicit constraints over a protected state while preserving integrity, invariants, drift awareness, mandate continuity, and auditable state transitions.
+**OPTIONAL CONTAINMENT** after/beside PERCEIVE, before or around execution. Wired from [`observe-perceive`](https://github.com/wking53214/observe-perceive) extra `fortress` (`fortress_perceive_adapter.py`). Not a standalone product. Distinct from AUGUR (veto simulation).
 
-The current implementation demonstrates these capabilities through a unified kernel that combines multiple control strategies behind a common interface.
+## 2. Full System Scope & Architectural Depth
 
-The current implementation is a representative example of how the kernel functions. It does not define the architectural limits or intended application domain of FORTRESS-KERNEL.
+`fortress_unified.py` merges three strategies behind `FortressConfig.controller_mode`: `"sage"` | `"lyapunov"` | `"energy"` (default energy).
 
----
+Uncalibrated / hardcoded tunables (honest list, not exhaustive): `activation_threshold=0.45`, `authority_enter_threshold=0.55`, `authority_exit_threshold=0.35`, `nominal_slew=0.20`, `sensitivity=15.0`, `max_contraction_ratio=0.98`, `fim_beta=0.90`, `recovery_freeze_cycles=8`, `prov_risk_no_sig=0.5`, divergence caps `0.45` / scale `25.0`, buffer lengths 10/16, `rng_seed=42`.
 
-# Core Concept
+HMAC appears in the unified kernel; numpy state vectors are the actual control substrate.
 
-FORTRESS-KERNEL establishes a controlled boundary around a protected state.
+## 3. What It Does NOT Do / Non-Goals
 
-Instead of allowing state to be modified without an explicit control mechanism:
+- Does not approve policy or issue grants.
+- Does not simulate futures (AUGUR).
+- Docstrings mentioning ESN/Lyapunov in **VANGUARD** are not this code; do not confuse the retired VANGUARD files with this package.
 
-    STATE
-      │
-      ▼
-    UNCONTROLLED MUTATION
-      │
-      ▼
-    NEW STATE
+## 4. Brutally Honest Current Status & Gaps
 
-FORTRESS-KERNEL introduces a governed control path:
+Commercial red team: **FEATURE** (a well-made guard, not a market). Easy to rebuild per actuator. 48 tests. Unfrozen 2026-09-11. Thresholds are engineering guesses, not fitted controllers. Branch name `Main` breaks naive `git clone -b main`.
 
-    STATE
-      │
-      ▼
-    FORTRESS-KERNEL
-      │
-      ├── validate
-      ├── enforce
-      ├── compare
-      ├── detect drift
-      ├── verify invariants
-      ├── evaluate mandate
-      └── record audit state
-      │
-      ▼
-    AUTHORIZED STATE
+## 5. Core Invariants & Guarantees
 
-The kernel therefore acts as a control boundary between a stateful system and the changes permitted to that system.
+Bounded slew/target when the controller is actually invoked. Audit chain of interventions inside the module. Fail-closed only if the adapter treats containment refusal as halt — that is observe-perceive's job.
 
----
+**Audit key.** `ImmutableAuditLedger` signs each record with an HMAC. The key comes from the `audit_key` argument or the `FORTRESS_AUDIT_KEY` environment variable. With neither set, it signs with a random key held only by that ledger, sets `ledger.ephemeral_key` to `True`, and logs a warning: tampering is still caught in-process, but the records cannot be verified anywhere else, and there is no built-in default key. `FortressUnified` builds its ledger without arguments, so for the kernel the environment variable is the only way to supply a key (or assign `kernel.audit` yourself after construction). An empty value counts as unset.
 
-# Architectural Principle
+## 6. Inputs, Outputs & Type Contracts
 
-The fundamental capability of FORTRESS-KERNEL is not any particular control algorithm.
+`FortressConfig` + unified orchestrator in `fortress_unified.py`. Pin: `fortress-kernel @ git+…@4105ccb5`.
 
-It is the ability to place multiple explicit control mechanisms behind a common enforcement boundary.
+## 7. Stack Integration Topology
 
-Conceptually:
+```text
+observe-perceive extra `fortress` → fortress_perceive_adapter → fortress_unified
+AUGUR is NOT this repo
+VANGUARD is retired specimens in TOUCHSTONE
+```
 
-    INPUT STATE
-        │
-        ▼
-    CONTROL POLICY
-        │
-        ▼
-    CONTROL KERNEL
-        │
-        ├── CONTROL MODE A
-        ├── CONTROL MODE B
-        └── CONTROL MODE C
-        │
-        ▼
-    INTEGRITY / INVARIANT CHECKS
-        │
-        ▼
-    AUTHORIZED RESULT
+## 8. Connecting to CNS (optional)
 
-This permits different control strategies to operate within a common framework without requiring the downstream system to understand the internal implementation of each strategy.
+The kernel stands alone: numpy is still its only runtime dependency, nothing imports CNS when the kernel loads, and the 48 kernel tests pass with CNS absent. If CNS is installed, `fortress_cns_connector` expresses the kernel's own verdicts as `cns.gate` results so they can be resolved alongside gates from other repositories. It runs the kernel's own predicates unchanged and never re-implements a threshold.
 
----
+```
+pip install 'fortress-kernel[cns] @ git+https://github.com/wking53214/fortress-kernel.git@Main'
+```
 
-# Multi-Mode Control
+fortress-kernel is not on a package index, so the extra is installed from git (pin a commit instead of `Main` for a reproducible install, as in section 6) or from a checkout with `pip install '.[cns]'`. CNS needs Python 3.10 or newer.
 
-The kernel unifies three control strategies behind a common interface.
+```python
+from fortress_cns_connector import NumericSafetyGate, InvariantGate, AuditChainGate
+from cns.gate import resolve
 
-The strategies represent different ways of determining how a protected state should respond to an input or deviation.
+admit = NumericSafetyGate().check({"error": error})         # ALPHA, before process()
+if admit.blocking():
+    raise SystemExit(admit.reason)                           # process() is never called
+result = fortress.process(payload, error, live_signal)
+ran = [
+    InvariantGate().check({"state": result["output"], "distortion": result["distortion"],
+                           "error": error, "volatility": volatility}),   # OMEGA
+    AuditChainGate().check(fortress.audit),                              # OMEGA
+]
+resolve([admit, *ran])    # PASS, RETRY or TERMINAL_BREACH, fail-closed
+```
 
-The important architectural property is the common control surface.
+| Kernel decision | CNS position | CNS outcome | Verdict is bound to |
+|---|---|---|---|
+| `IntegrityLayer.analyze` refuses a NaN or infinite error (`numeric_safety`) | `ALPHA`: it is the first line of `process()`, before the controller or the audit run | refused: `TERMINAL_BREACH`; otherwise `PASS` | `{"error": e}` |
+| `MandateLayer.enforce` on a proposed action delta (`mandate`) | `ALPHA`: judges the action before it is applied | delta unchanged: `PASS`; clamped: `RETRY`, with the kernel's clamped delta in `reason` | `{"action": {"delta": d}, "current_kpi", "target_kpi", "volatility"}` |
+| `InvariantMonitor.check` (`invariants`) | `OMEGA`: judges state, distortion, error and volatility a run produced | any violation: `TERMINAL_BREACH`; none: `PASS` | `{"state", "distortion", "error", "volatility"}` |
+| `ImmutableAuditLedger.verify_integrity` (`audit_chain`) | `OMEGA`: judges the ledger the kernel produced | False or raising: `TERMINAL_BREACH`; True: `PASS` | `{"records": ledger.ledger}`, never the audit key |
 
-Rather than exposing three unrelated implementations:
+`cns_chain()` returns a `cns.gate.GateChain` with the two `ALPHA` gates in `alpha` and the two `OMEGA` gates in `omega`. The kernel has both ends, but `FortressUnified.process` applies only the numeric-safety refusal itself; it constructs an `InvariantMonitor` and a `DriftMonitor` and calls neither, and it has no `MandateLayer`. The connector does not wire them in.
 
-    CONTROL A
-    CONTROL B
-    CONTROL C
+`volatility` is the volatility of this run. `process()` does not return the one its `IntegrityLayer` computed, so pass the one you measured: a hard-coded `0.0` would make `VOLATILITY_SPIKE` unreachable and bind the verdict to a reading the run did not produce.
 
-FORTRESS-KERNEL provides:
+Things to know:
 
-    ┌──────────────────────────────┐
-    │       FORTRESS-KERNEL        │
-    │                              │
-    │   ┌──────┐ ┌──────┐ ┌──────┐ │
-    │   │Mode A│ │Mode B│ │Mode C│ │
-    │   └──────┘ └──────┘ └──────┘ │
-    │                              │
-    └──────────────┬───────────────┘
-                   │
-                   ▼
-             CONTROL RESULT
+- **A `PASS` from `numeric_safety` is narrow.** It judges the error reading, the first thing `process()` checks, and nothing else. It does not promise that `process()` succeeds: a `numpy.float32` error passes and `process()` then raises `TypeError` from the ledger, an error of `1e308` passes and `process()` raises `OverflowError` in the controller, and a NaN `live_signal` raises `ValueError` from the ledger, each after the controller has already updated its state.
+- **Fail closed on non-finite numbers.** `InvariantMonitor.check` returns `[]` for NaN and `MandateLayer.enforce` passes a NaN delta through, so the kernel alone would read them as fine. The connector reports any NaN or infinite input to those two gates as `TERMINAL_BREACH`. The kernel's functions are unchanged.
+- **`invariants` mirrors the monitor, asymmetry included.** `InvariantMonitor.check` bounds `state` on both sides but `error`, `distortion` and `volatility` from above only (`error > 20.0`, no `abs()`), so a large negative error is not a `MODEL_FAILURE` and the gate passes it, as the kernel does. The gate reports what the kernel's predicate says and does not widen it; a consumer that wants a symmetric bound has to add one.
+- **A clamp as `RETRY` is the connector's inference.** The kernel never rejects a clamped action: `enforce` applies the clamp and the action goes on. The connector reports the clamp as `RETRY`, which blocks, so a connected consumer is stricter than the kernel here. The kernel's own clamped delta is in `reason` for a consumer that would rather accept it.
+- **Digests are stable.** Numpy scalars are turned into plain numbers before hashing, so a digest does not depend on the numpy version. A non-finite number, which CNS cannot hash, is digested as `{"nonfinite": "nan" | "inf" | "-inf"}` and the verdict stays bound. Content CNS cannot describe at all gives an unbound `TERMINAL_BREACH` (empty `subject_digest`, named by `cns.gate.unbound`) and never an exception or a `PASS`. For a tampered ledger that is a record holding a set, bytes or another object, a mapping with a non-string key, a lone surrogate, an integer of more than 4300 digits, a cycle, nesting deeper than CNS can recurse (a few hundred levels, which the kernel itself still accepts), or a ledger that has lost its `ledger` list.
+- **Three kernel outputs are not mapped.** `DriftMonitor` returns an advisory `(is_drifting, drift)`, `OscillationDetector` only feeds the `oscillation_detected` field of the result and the audit record, and the `VERIFIED` / `UNVERIFIED` label on the result is set from whether the payload carries a signature value. The kernel defines no consequence for any of them, so any outcome would be invented.
 
-This allows the control mechanism to be changed without changing the fundamental interface through which the protected state is governed.
+Without CNS installed, the connector's functions raise `CnsNotInstalled` with the install command. Nothing else in the kernel changes. The connector adds its own tests in `test_fortress_cns_independence.py` (run in a subprocess with CNS blocked, never skipped) and `test_fortress_cns_connector.py` (skipped when CNS is absent).
 
----
-
-# Integrity
-
-Integrity is a core concern of the kernel.
-
-A control decision is not meaningful if the state against which the decision is made can be silently altered.
-
-FORTRESS-KERNEL therefore incorporates integrity-oriented mechanisms into the control path.
-
-Conceptually:
-
-    OBSERVED STATE
-          │
-          ▼
-       INTEGRITY
-          │
-          ├── valid
-          │
-          └── compromised / inconsistent
-          │
-          ▼
-       CONTROL
-
-Integrity is therefore treated as a prerequisite to trustworthy control rather than as an unrelated logging feature.
-
----
-
-# Invariants
-
-FORTRESS-KERNEL supports explicit invariant enforcement.
-
-An invariant represents a condition that must remain true for the protected system to remain within its defined operating constraints.
-
-The conceptual relationship is:
-
-    STATE
-      │
-      ▼
-    INVARIANTS
-      │
-      ├── satisfied
-      │
-      └── violated
-      │
-      ▼
-    CONTROL RESPONSE
-
-This allows the kernel to distinguish between:
-
-    "A state changed"
-
-and:
-
-    "A state changed in a way that violates a condition that must remain true."
-
-That distinction is fundamental to controlled state evolution.
-
----
-
-# Drift
-
-The kernel also incorporates drift-oriented reasoning.
-
-A state can remain technically valid while nevertheless moving progressively away from its intended or established operating condition.
-
-The architectural distinction is:
-
-    VALID STATE
-
-versus:
-
-    ACCEPTABLE STATE
-
-and:
-
-    CURRENT STATE
-
-versus:
-
-    EXPECTED / ESTABLISHED STATE
-
-Drift monitoring allows the system to identify changes that may not constitute an immediate invariant violation but nevertheless represent meaningful deviation.
-
----
-
-# Mandate
-
-FORTRESS-KERNEL includes the concept of an explicit mandate governing the control operation.
-
-A mandate establishes the authority or operating constraint under which a control action is permitted.
-
-Conceptually:
-
-    REQUEST
-       │
-       ▼
-    MANDATE
-       │
-       ├── permitted
-       │
-       └── not permitted
-       │
-       ▼
-    CONTROL ACTION
-
-This separates:
-
-    "The system can perform this action"
-
-from:
-
-    "The system is authorized to perform this action."
-
-The distinction becomes important when the kernel is incorporated into larger governed systems.
-
----
-
-# Control Boundary
-
-FORTRESS-KERNEL can be placed at a boundary where state-changing operations must pass through a controlled mechanism.
-
-For example:
-
-    ┌──────────────────┐
-    │ UPSTREAM SYSTEM  │
-    └────────┬─────────┘
-             │
-             ▼
-    ┌──────────────────┐
-    │ FORTRESS-KERNEL  │
-    │                  │
-    │ integrity        │
-    │ invariants       │
-    │ mandate          │
-    │ drift            │
-    │ control modes    │
-    └────────┬─────────┘
-             │
-             ▼
-    ┌──────────────────┐
-    │ DOWNSTREAM STATE │
-    └──────────────────┘
-
-This allows the kernel to serve as an enforcement point without requiring the upstream or downstream system to implement the complete control architecture itself.
-
----
-
-# Auditability
-
-Control operations should be reconstructable.
-
-FORTRESS-KERNEL therefore maintains audit-oriented information associated with control activity.
-
-The purpose is to preserve information about:
-
-- what state was presented;
-- what control mechanism was applied;
-- what conditions were evaluated;
-- whether constraints were satisfied;
-- what result was produced;
-- and what state followed.
-
-The kernel therefore treats control as an observable operation rather than an opaque function call.
-
-## State Provenance
-
-Each committed audit state receives a deterministic `state_commitment`. The commitment
-canonically serializes the relevant FORTRESS state and includes the prior commitment,
-creating a logical chain across transitions. The existing HMAC remains the mechanism
-for authenticating audit records; the commitment is an identifier and tamper-evident
-link, not encryption, non-repudiation, or protection against a compromised audit key.
-
-The HMAC key comes from the `audit_key` argument or the `FORTRESS_AUDIT_KEY` environment
-variable. With neither set, the ledger signs with a random key held only by the current
-process and logs a warning: tampering is still detected in-process, but the records cannot
-be verified anywhere else. There is no built-in default key.
-
-An optional `OscillationDetector` can report repeated normalized controller-result
-observations across a kernel instance. It is resettable and instance-scoped, and its
-signal is advisory: repeated output is not necessarily mathematical oscillation and
-does not authorize, reject, or alter a control result.
-
-
----
-
-# Deterministic Control
-
-The kernel is designed around explicit and reproducible control logic.
-
-Given the same:
-
-- input state;
-- control parameters;
-- mandate;
-- invariant configuration;
-- and implementation,
-
-the control path should produce a reproducible result.
-
-This makes the system suitable for environments where control behavior needs to be:
-
-- tested;
-- inspected;
-- reproduced;
-- compared;
-- and audited.
-
----
-
-# Domain Independence
-
-FORTRESS-KERNEL is not inherently tied to a particular industry.
-
-The kernel's underlying concerns are structural:
-
-- protected state;
-- control policy;
-- integrity;
-- invariants;
-- mandate;
-- drift;
-- control strategy;
-- and auditability.
-
-Those concerns can arise in many environments.
-
-Potential application domains could include:
-
-- autonomous systems;
-- industrial control;
-- software infrastructure;
-- cybersecurity;
-- communications;
-- transportation;
-- financial systems;
-- AI systems;
-- safety-critical systems;
-- or other environments requiring controlled state transitions.
-
-These are architectural examples rather than claims that the repository currently implements each of those applications.
-
----
-
-# Current Implementation
-
-The current repository provides a concrete implementation of the kernel using its unified control architecture.
-
-The implementation demonstrates:
-
-- multiple control strategies;
-- a common control interface;
-- state management;
-- integrity-related checks;
-- invariant handling;
-- drift-related controls;
-- mandate-related controls;
-- and audit-oriented state.
-
-The current implementation should therefore be understood as the **representative implementation of the kernel**, rather than as a domain-specific product.
-
----
-
-# Relationship to Other Systems
-
-FORTRESS-KERNEL is not exclusively designed to attach to a particular neighboring repository.
-
-It does not fundamentally depend upon one specific external system to define its purpose.
-
-Its architectural role is that of a reusable kernel that can be incorporated into systems requiring its control primitives.
-
-Conceptually:
-
-    SYSTEM A ──┐
-               │
-    SYSTEM B ──┼──► FORTRESS-KERNEL
-               │
-    SYSTEM C ──┘
-
-provided that the surrounding system supplies the appropriate interface and operating context.
-
-The repository should therefore be regarded as **composable rather than single-repository-specific**.
-
----
-
-# Relationship to Governance
-
-FORTRESS-KERNEL can provide an enforcement primitive within a larger governance architecture.
-
-The distinction is:
-
-    GOVERNANCE
-        │
-        │ defines what must be true
-        ▼
-    FORTRESS-KERNEL
-        │
-        │ enforces / evaluates
-        ▼
-    PROTECTED STATE
-
-The kernel therefore does not need to contain the entire governance system.
-
-It can instead act as the mechanism through which defined constraints are enforced against state.
-
-This makes it suitable as a lower-level component within a larger governed architecture.
-
----
-
-# Architectural Separation
-
-FORTRESS-KERNEL separates several concerns that are often collapsed into a single control function.
-
-Conceptually:
-
-    ┌───────────────────────────────┐
-    │            POLICY             │
-    └───────────────┬───────────────┘
-                    │
-                    ▼
-    ┌───────────────────────────────┐
-    │           MANDATE             │
-    └───────────────┬───────────────┘
-                    │
-                    ▼
-    ┌───────────────────────────────┐
-    │           CONTROL             │
-    │                               │
-    │       multiple modes          │
-    └───────────────┬───────────────┘
-                    │
-                    ▼
-    ┌───────────────────────────────┐
-    │          INVARIANTS            │
-    └───────────────┬───────────────┘
-                    │
-                    ▼
-    ┌───────────────────────────────┐
-    │           INTEGRITY            │
-    └───────────────┬───────────────┘
-                    │
-                    ▼
-    ┌───────────────────────────────┐
-    │             STATE              │
-    └───────────────────────────────┘
-
-This separation makes the kernel easier to reason about and test independently.
-
----
-
-# What FORTRESS-KERNEL Is Not
-
-FORTRESS-KERNEL is not:
-
-- a complete enterprise governance platform;
-- a general-purpose authorization server;
-- an industry-specific safety system;
-- a generic database;
-- a monitoring platform;
-- or a replacement for the larger system in which it may be deployed.
-
-It is a **control kernel**.
-
-Its purpose is to provide reusable mechanisms for controlled state evolution.
-
----
-
-# Design Principles
-
-## Explicit Control
-
-State changes should pass through identifiable control logic.
-
-## Multiple Control Strategies
-
-Different control approaches should be able to operate behind a common interface.
-
-## Integrity Before Trust
-
-The kernel should not blindly operate on state whose integrity cannot be established.
-
-## Invariants
-
-Conditions that must remain true should be explicitly represented and evaluated.
-
-## Mandate Continuity
-
-Capability and authority should remain conceptually distinct.
-
-## Drift Awareness
-
-Gradual deviation should be detectable even when absolute constraints have not yet failed.
-
-## Auditability
-
-Control decisions should leave an inspectable representation of what occurred.
-
-## Domain Independence
-
-The kernel should not require a particular industry or application domain.
-
-## Composability
-
-The kernel should be capable of being incorporated into different surrounding architectures rather than being permanently coupled to one repository.
-
----
-
-# Architectural Model
-
-The complete conceptual flow is:
-
-    ┌─────────────────────┐
-    │     INPUT STATE     │
-    └──────────┬──────────┘
-               │
-               ▼
-    ┌─────────────────────┐
-    │      MANDATE        │
-    └──────────┬──────────┘
-               │
-               ▼
-    ┌─────────────────────┐
-    │      INTEGRITY      │
-    └──────────┬──────────┘
-               │
-               ▼
-    ┌─────────────────────┐
-    │     INVARIANTS      │
-    └──────────┬──────────┘
-               │
-               ▼
-    ┌─────────────────────┐
-    │       DRIFT         │
-    └──────────┬──────────┘
-               │
-               ▼
-    ┌─────────────────────┐
-    │   CONTROL ENGINE    │
-    │                     │
-    │  ┌───┐ ┌───┐ ┌───┐ │
-    │  │ A │ │ B │ │ C │ │
-    │  └───┘ └───┘ └───┘ │
-    └──────────┬──────────┘
-               │
-               ▼
-    ┌─────────────────────┐
-    │    CONTROL RESULT   │
-    └──────────┬──────────┘
-               │
-               ▼
-    ┌─────────────────────┐
-    │       AUDIT         │
-    └─────────────────────┘
-
----
-
-# Current Status
-
-FORTRESS-KERNEL is a reusable control-kernel implementation demonstrating how multiple control strategies can be placed behind a common enforcement boundary while incorporating integrity, invariant, mandate, drift, and audit considerations.
-
-Its current implementation is the **representative example of the architecture in operation**.
-
-The architecture itself is not restricted to the current example, a particular industry, or a particular neighboring repository.
-
----
-
-# Central Proposition
-
-> **A protected system state should not be changed merely because an operation is technically possible. A control kernel can establish the conditions under which state may change, evaluate those conditions through multiple control strategies, preserve integrity and invariants, account for mandate and drift, and produce an auditable result.**
+Apache-2.0.
