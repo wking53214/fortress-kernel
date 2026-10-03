@@ -16,6 +16,8 @@ import hmac
 import json
 import logging
 import math
+import os
+import secrets
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import asdict, dataclass, field, replace
@@ -210,8 +212,22 @@ class ImmutableAuditLedger:
     STATE_COMMITMENT_VERSION = 1
     GENESIS_COMMITMENT = "0" * 64
 
-    def __init__(self, audit_key: str = "fortress-key"):
-        self.audit_key = audit_key.encode()
+    def __init__(self, audit_key: Optional[str] = None):
+        # No published default: an HMAC key written in the source lets anyone
+        # forge records that verify. Without an explicit or FORTRESS_AUDIT_KEY
+        # key, sign with a random key held only by this process: tampering is
+        # still caught in-process, but records cannot be verified elsewhere.
+        audit_key = audit_key or os.environ.get("FORTRESS_AUDIT_KEY")
+        self.ephemeral_key = not audit_key
+        if self.ephemeral_key:
+            logger.warning(
+                "ImmutableAuditLedger has no audit key (set FORTRESS_AUDIT_KEY); "
+                "using a random per-process key, so records cannot be verified "
+                "outside this process."
+            )
+            self.audit_key = secrets.token_bytes(32)
+        else:
+            self.audit_key = audit_key.encode()
         self.ledger: List[Dict[str, Any]] = []
         self._next_sequence = 0
         self._parent_commitment = self.GENESIS_COMMITMENT

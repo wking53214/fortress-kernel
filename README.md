@@ -28,6 +28,8 @@ Commercial red team: **FEATURE** (a well-made guard, not a market). Easy to rebu
 
 Bounded slew/target when the controller is actually invoked. Audit chain of interventions inside the module. Fail-closed only if the adapter treats containment refusal as halt — that is observe-perceive's job.
 
+**Audit key.** `ImmutableAuditLedger` signs each record with an HMAC. The key comes from the `audit_key` argument or the `FORTRESS_AUDIT_KEY` environment variable. With neither set, it signs with a random key held only by that ledger, sets `ledger.ephemeral_key` to `True`, and logs a warning: tampering is still caught in-process, but the records cannot be verified anywhere else, and there is no built-in default key. `FortressUnified` builds its ledger without arguments, so for the kernel the environment variable is the only way to supply a key (or assign `kernel.audit` yourself after construction). An empty value counts as unset.
+
 ## 6. Inputs, Outputs & Type Contracts
 
 `FortressConfig` + unified orchestrator in `fortress_unified.py`. Pin: `fortress-kernel @ git+…@4105ccb5`.
