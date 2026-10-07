@@ -20,7 +20,7 @@ from fortress_unified import (
 )
 
 __version__ = "1.0.0"
-__author__ = "William King"
+__author__ = "William N. King"
 __email__ = "wking53214@gmail.com"
 
 __all__ = [
