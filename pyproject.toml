@@ -9,7 +9,7 @@ description = "Minimal, composable governance kernel with integrity checking, in
 readme = "README.md"
 requires-python = ">=3.9"
 license = { text = "MIT" }
-authors = [{ name = "William King", email = "wking53214@gmail.com" }]
+authors = [{ name = "William N. King", email = "wking53214@gmail.com" }]
 dependencies = ["numpy>=1.24.0"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
