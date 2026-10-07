@@ -8,14 +8,14 @@ version = "1.0.0"
 description = "Minimal, composable governance kernel with integrity checking, invariant enforcement, and mandate-driven control."
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
+license = { text = "Apache-2.0" }
 authors = [{ name = "William N. King", email = "wking53214@gmail.com" }]
 dependencies = ["numpy>=1.24.0"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
-    "License :: OSI Approved :: MIT License",
+    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
