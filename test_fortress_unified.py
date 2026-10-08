@@ -539,3 +539,15 @@ class TestIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestLyapunovReproducibility(unittest.TestCase):
+    def test_two_fresh_controllers_give_identical_distortion(self):
+        """The FIM term draws from the seeded generator, so runs repeat exactly."""
+        payload = Payload(body="x", metadata={"source_id": "s", "signature": "sig"})
+
+        def run():
+            controller = LyapunovController(FortressConfig())
+            return [controller.process(payload, 0.3, 0.5)["distortion"] for _ in range(5)]
+
+        self.assertEqual(run(), run())
