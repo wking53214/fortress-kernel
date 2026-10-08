@@ -417,7 +417,7 @@ class LyapunovController(Controller):
         prov_risk = 0.0 if is_verified else self.config.prov_risk_no_sig
 
         # FIM divergence
-        g_t = np.random.randn(self.config.latent_dim) * 0.1
+        g_t = self.rng.randn(self.config.latent_dim) * 0.1
         self.G = self.config.fim_beta * self.G + (1.0 - self.config.fim_beta) * (g_t ** 2)
         fim_divergence = float(np.linalg.norm(self.G))
 
