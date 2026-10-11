@@ -228,6 +228,8 @@ class ImmutableAuditLedger:
             self.audit_key = secrets.token_bytes(32)
         else:
             self.audit_key = audit_key.encode()
+        # Public identifier for the signing key: a short hash of it, never the key.
+        self.key_id = "key-" + hashlib.sha256(b"fortress-key-id|" + self.audit_key).hexdigest()[:12]
         self.ledger: List[Dict[str, Any]] = []
         self._next_sequence = 0
         self._parent_commitment = self.GENESIS_COMMITMENT
@@ -285,6 +287,9 @@ class ImmutableAuditLedger:
         record["state_commitment"] = self._commit_state(
             record["sequence"], record["parent"], state
         )
+        # Algorithm and key ID are part of the signed body, so they are tamper-evident.
+        record["signature_algorithm"] = "hmac-sha256"
+        record["key_id"] = self.key_id
         msg = self._canonical_json(record)
         record["hmac"] = hmac.new(self.audit_key, msg, hashlib.sha256).hexdigest()
         self.ledger.append(record)
@@ -309,6 +314,8 @@ class ImmutableAuditLedger:
             except (TypeError, ValueError, OverflowError):
                 return False
             if not hmac.compare_digest(stored_hmac, computed_hmac):
+                return False
+            if record.get("key_id") != self.key_id:
                 return False
             if (
                 record.get("sequence") != sequence
