@@ -24,10 +24,17 @@ PIN = "3b465dbcc1a6a4ab6f1040f93d44483196abd737"
 SOURCES = ("fortress_unified.py", "fortress_cns_connector.py", "__init__.py")
 
 
-def _run(code, block=True, extra_path=None):
+# A stub CNS with no gate module. Hides cns.gate outright, because a real CNS
+# installed in the environment can still supply the submodule even when the stub
+# package shadows the top-level name.
+NO_GATE = "import sys; sys.modules['cns.gate'] = None\n"
+
+
+def _run(code, block=True, extra_path=None, hide_gate=False):
     path = os.pathsep.join([str(ROOT)] + ([str(extra_path)] if extra_path else []))
+    preamble = BLOCK if block else (NO_GATE if hide_gate else "")
     return subprocess.run(
-        [sys.executable, "-c", (BLOCK if block else "") + textwrap.dedent(code)],
+        [sys.executable, "-c", preamble + textwrap.dedent(code)],
         capture_output=True,
         text=True,
         env={"PYTHONPATH": path, "PATH": ""},
@@ -270,6 +277,7 @@ class TestACnsThatIsPresentButUnusable(unittest.TestCase):
                     """,
                     block=False,
                     extra_path=stub,
+                    hide_gate=gate_source is None,
                 )
                 self.assertEqual(done.returncode, 0, done.stderr)
                 self.assertEqual(done.stdout.strip(), "ok")
