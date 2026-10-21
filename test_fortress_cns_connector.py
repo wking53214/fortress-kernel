@@ -586,7 +586,7 @@ class TestAuditChainGate(unittest.TestCase):
         fortress = kernel_with_history()
         oracle = cns_gate.subject_digest({"records": json.loads(json.dumps(fortress.audit.ledger))})
         self.assertEqual(AuditChainGate().digest(fortress.audit), oracle)
-        keyed = ImmutableAuditLedger(audit_key="a-different-key", key_id="other")
+        keyed = ImmutableAuditLedger(audit_key="a-different-key")
         keyed.append("e", {"x": 1})
         self.assertNotIn("a-different-key", json.dumps(keyed.ledger))
 
