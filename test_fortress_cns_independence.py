@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent
 
 BLOCK = "import sys; sys.modules['cns'] = None; sys.modules['cns.gate'] = None\n"
 
-PIN = "da9ab8c8c47097b38ad9792dec23fed45d31ae3f"
+PIN = "v1.9.0"
 
 SOURCES = ("fortress_unified.py", "fortress_cns_connector.py", "__init__.py")
 
@@ -301,7 +301,7 @@ class TestPackagingDeclaresNoRuntimeDependency(unittest.TestCase):
         section = text.split("[project.optional-dependencies]", 1)[1].split("\n[", 1)[0]
         found = re.search(r"^cns\s*=\s*\[(.*?)\]", section, re.M | re.S)
         self.assertIsNotNone(found, "no cns extra")
-        self.assertIn(f"cns.git@{PIN}", found.group(1))
+        self.assertIn(f"CNS.git@{PIN}", found.group(1))
 
     def test_the_connector_ships_in_the_wheel(self):
         # A module left out of py-modules is silently left out of the wheel.

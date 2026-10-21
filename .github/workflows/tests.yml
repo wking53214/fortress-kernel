@@ -33,6 +33,34 @@ jobs:
       - name: Tests
         run: python -m pytest -q
 
+  cns:
+    # The job above installs only `.[dev]`, so test_fortress_cns_connector.py
+    # skips there as a module and a green check says nothing about the
+    # connector. This job installs the cns extra and sets
+    # FORTRESS_REQUIRE_CNS=1, which turns a missing cns into a failure, so the
+    # connector tests cannot silently skip here. No 3.9: CNS needs 3.10 or
+    # newer, so the extra cannot be installed on it.
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev,cns]"
+      - name: Collected test count is not zero
+        run: python -m pytest --collect-only -q
+      - name: Tests with CNS required
+        env:
+          FORTRESS_REQUIRE_CNS: "1"
+        run: python -m pytest -q -rs
+
   wheel:
     # A wheel is what pip actually installs, and it is the only artifact
     # that can be wrong in a way nothing else here sees. Measured
