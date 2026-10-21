@@ -49,19 +49,19 @@ def captured_logs():
 class TestKeySource(unittest.TestCase):
     def test_the_argument_is_used(self):
         with clean_env():
-            ledger = ImmutableAuditLedger("argument-key", key_id="argument")
+            ledger = ImmutableAuditLedger("argument-key")
         self.assertEqual(ledger.audit_key, b"argument-key")
         self.assertFalse(ledger.ephemeral_key)
 
     def test_the_environment_variable_is_used_when_there_is_no_argument(self):
-        with clean_env(FORTRESS_AUDIT_KEY="environment-key", FORTRESS_AUDIT_KEY_ID="environment"):
+        with clean_env(FORTRESS_AUDIT_KEY="environment-key"):
             ledger = ImmutableAuditLedger()
         self.assertEqual(ledger.audit_key, b"environment-key")
         self.assertFalse(ledger.ephemeral_key)
 
     def test_the_argument_wins_over_the_environment_variable(self):
-        with clean_env(FORTRESS_AUDIT_KEY="environment-key", FORTRESS_AUDIT_KEY_ID="environment"):
-            ledger = ImmutableAuditLedger("argument-key", key_id="argument")
+        with clean_env(FORTRESS_AUDIT_KEY="environment-key"):
+            ledger = ImmutableAuditLedger("argument-key")
         self.assertEqual(ledger.audit_key, b"argument-key")
 
     def test_no_key_gives_a_random_per_ledger_key_and_says_so(self):
@@ -76,7 +76,7 @@ class TestKeySource(unittest.TestCase):
     def test_empty_values_count_as_unset(self):
         with clean_env(FORTRESS_AUDIT_KEY=""):
             from_empty_env = ImmutableAuditLedger()
-            from_empty_argument = ImmutableAuditLedger("", key_id="argument")
+            from_empty_argument = ImmutableAuditLedger("")
         for ledger in (from_empty_env, from_empty_argument):
             self.assertTrue(ledger.ephemeral_key)
             self.assertEqual(len(ledger.audit_key), 32)
@@ -91,13 +91,13 @@ class TestWarning(unittest.TestCase):
         self.assertIn("FORTRESS_AUDIT_KEY", records[0].getMessage())
 
     def test_a_key_from_the_environment_is_silent(self):
-        with clean_env(FORTRESS_AUDIT_KEY="environment-key", FORTRESS_AUDIT_KEY_ID="environment"), captured_logs() as records:
+        with clean_env(FORTRESS_AUDIT_KEY="environment-key"), captured_logs() as records:
             ImmutableAuditLedger()
         self.assertEqual(records, [])
 
     def test_a_key_from_the_argument_is_silent(self):
         with clean_env(), captured_logs() as records:
-            ImmutableAuditLedger("argument-key", key_id="argument")
+            ImmutableAuditLedger("argument-key")
         self.assertEqual(records, [])
 
 
@@ -115,7 +115,7 @@ class TestSigning(unittest.TestCase):
         self.assertFalse(ledger.verify_integrity())
 
     def test_records_signed_with_the_old_default_do_not_verify_on_a_keyless_ledger(self):
-        old = self.filled(ImmutableAuditLedger(OLD_PUBLISHED_KEY, key_id="old"))
+        old = self.filled(ImmutableAuditLedger(OLD_PUBLISHED_KEY))
         self.assertTrue(old.verify_integrity())
         with clean_env():
             keyless = ImmutableAuditLedger()
@@ -133,22 +133,22 @@ class TestSigning(unittest.TestCase):
         self.assertFalse(hmac.compare_digest(signature, forged))
 
     def test_a_shared_environment_key_lets_another_ledger_verify_the_records(self):
-        with clean_env(FORTRESS_AUDIT_KEY="shared-secret", FORTRESS_AUDIT_KEY_ID="shared"):
+        with clean_env(FORTRESS_AUDIT_KEY="shared-secret"):
             writer = self.filled(ImmutableAuditLedger())
             reader = ImmutableAuditLedger()
         reader.ledger = copy.deepcopy(writer.ledger)
         self.assertTrue(reader.verify_integrity())
 
     def test_a_different_key_does_not_verify_the_records(self):
-        writer = self.filled(ImmutableAuditLedger("writer-key", key_id="writer"))
-        reader = ImmutableAuditLedger("another-key", key_id="reader")
+        writer = self.filled(ImmutableAuditLedger("writer-key"))
+        reader = ImmutableAuditLedger("another-key")
         reader.ledger = copy.deepcopy(writer.ledger)
         self.assertFalse(reader.verify_integrity())
 
 
 class TestKernel(unittest.TestCase):
     def test_the_kernel_builds_its_ledger_from_the_environment(self):
-        with clean_env(FORTRESS_AUDIT_KEY="environment-key", FORTRESS_AUDIT_KEY_ID="environment"):
+        with clean_env(FORTRESS_AUDIT_KEY="environment-key"):
             kernel = FortressUnified(FortressConfig())
         self.assertEqual(kernel.audit.audit_key, b"environment-key")
         self.assertFalse(kernel.audit.ephemeral_key)
