@@ -1,12 +1,14 @@
 """The connected half: what fortress-kernel's verdicts become when CNS is installed.
 
-Skipped as a module when CNS is absent. The independence half, which must hold
-in both environments, is in ``test_fortress_cns_independence.py`` and never
-skips.
+Skipped as a module when CNS is absent, unless FORTRESS_REQUIRE_CNS=1. CI's cns
+job installs the extra and sets it, so there a missing CNS is a failure, not a
+skip. The independence half, which must hold in both environments, is in
+``test_fortress_cns_independence.py`` and never skips.
 """
 
 import itertools
 import json
+import os
 import re
 import sys
 import unittest
@@ -16,9 +18,12 @@ from unittest import mock
 import numpy as np
 import pytest
 
-cns_gate = pytest.importorskip(
-    "cns.gate", reason="cns not installed; run in an environment with fortress-kernel[cns]"
-)
+if os.environ.get("FORTRESS_REQUIRE_CNS") == "1":  # CI: a missing cns is a failure, not a skip
+    import cns.gate as cns_gate
+else:
+    cns_gate = pytest.importorskip(
+        "cns.gate", reason="cns not installed; run in an environment with fortress-kernel[cns]"
+    )
 
 from fortress_cns_connector import (  # noqa: E402
     AuditChainGate,

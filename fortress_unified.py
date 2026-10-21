@@ -212,7 +212,7 @@ class ImmutableAuditLedger:
     STATE_COMMITMENT_VERSION = 1
     GENESIS_COMMITMENT = "0" * 64
 
-    def __init__(self, audit_key: Optional[str] = None, key_id: Optional[str] = None):
+    def __init__(self, audit_key: Optional[str] = None):
         # No published default: an HMAC key written in the source lets anyone
         # forge records that verify. Without an explicit or FORTRESS_AUDIT_KEY
         # key, sign with a random key held only by this process: tampering is
@@ -226,17 +226,10 @@ class ImmutableAuditLedger:
                 "outside this process."
             )
             self.audit_key = secrets.token_bytes(32)
-            self.key_id = f"ephemeral-{secrets.token_hex(4)}"
         else:
-            # A configured key must be named by the caller, never derived from the key.
-            key_id = key_id or os.environ.get("FORTRESS_AUDIT_KEY_ID")
-            if not key_id:
-                raise ValueError(
-                    "a configured audit key needs a caller-named key ID: pass key_id "
-                    "or set FORTRESS_AUDIT_KEY_ID"
-                )
             self.audit_key = audit_key.encode()
-            self.key_id = key_id
+        # Public identifier for the signing key: a short hash of it, never the key.
+        self.key_id = "key-" + hashlib.sha256(b"fortress-key-id|" + self.audit_key).hexdigest()[:12]
         self.ledger: List[Dict[str, Any]] = []
         self._next_sequence = 0
         self._parent_commitment = self.GENESIS_COMMITMENT
@@ -295,7 +288,7 @@ class ImmutableAuditLedger:
             record["sequence"], record["parent"], state
         )
         # Algorithm and key ID are part of the signed body, so they are tamper-evident.
-        record["algorithm"] = "hmac-sha256"
+        record["signature_algorithm"] = "hmac-sha256"
         record["key_id"] = self.key_id
         msg = self._canonical_json(record)
         record["hmac"] = hmac.new(self.audit_key, msg, hashlib.sha256).hexdigest()
