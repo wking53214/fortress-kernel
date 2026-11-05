@@ -207,9 +207,10 @@ def cns_available() -> bool:
 def _bind(cns: ModuleType, content: Mapping[str, Any]) -> str:
     """``cns.gate.subject_digest(content)``, or ``TypeError`` for content CNS cannot describe.
 
-    CNS refuses an unsupported type with ``TypeError`` but trips over other
-    shapes with other errors: a non-string mapping key is a ``KeyError``, a lone
-    surrogate a ``UnicodeEncodeError``, an integer of more than 4300 digits a
+    CNS refuses an unsupported type, and a non-string mapping key, with
+    ``TypeError`` but trips over other shapes with other errors: a lone
+    surrogate a ``UnicodeEncodeError`` (a ``TypeError`` from newer CNS), an
+    integer of more than 4300 digits a
     ``ValueError`` and nesting past the recursion limit a ``RecursionError``.
     What a tamper can change is exactly what a digest has to survive, so every
     one of them is the same answer here, with the original error as the cause.
