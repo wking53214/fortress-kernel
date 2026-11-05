@@ -7,7 +7,7 @@ name = "fortress-kernel"
 version = "1.0.0"
 description = "Minimal, composable governance kernel with integrity checking, invariant enforcement, and mandate-driven control."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "William N. King", email = "wking53214@gmail.com" }]
 dependencies = ["numpy>=1.24.0"]
@@ -16,7 +16,6 @@ classifiers = [
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "License :: OSI Approved :: Apache Software License",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
 ]
@@ -28,7 +27,7 @@ Homepage = "https://github.com/wking53214/fortress-kernel"
 dev = ["pytest>=8"]
 # Optional: lets the kernel's verdicts be expressed as CNS gate results. The
 # kernel imports nothing from CNS unless fortress_cns_connector is used, and
-# its suite passes without it. Pinned to tag v1.9.0. CNS itself needs Python
+# its suite passes without it. Pinned to tag v2.3.0. CNS itself needs Python
 # 3.10 or newer, so on 3.9 this extra cannot be installed.
 cns = [
     "cns @ git+https://github.com/wking53214/CNS.git@v2.3.0",

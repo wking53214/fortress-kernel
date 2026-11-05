@@ -779,7 +779,7 @@ class TestTranslation(unittest.TestCase):
         limit_int_digits(self)
         cases = (
             ("a set", {1, 2}, "TypeError"),
-            ("a non-string key", {1: "a"}, "KeyError"),
+            ("a non-string key", {1: "a"}, "TypeError"),
             ("a lone surrogate", "\ud800", "UnicodeEncodeError"),
             ("an integer of 5000 digits", HUGE, "ValueError"),
             ("nesting past the recursion limit", deep_list(3000), "RecursionError"),
