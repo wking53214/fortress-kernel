@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent
 
 BLOCK = "import sys; sys.modules['cns'] = None; sys.modules['cns.gate'] = None\n"
 
-PIN = "v2.3.0"
+PIN = "v3.0.0"
 
 SOURCES = ("fortress_unified.py", "fortress_cns_connector.py", "__init__.py")
 
