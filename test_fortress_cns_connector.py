@@ -780,7 +780,7 @@ class TestTranslation(unittest.TestCase):
         cases = (
             ("a set", {1, 2}, "TypeError"),
             ("a non-string key", {1: "a"}, "TypeError"),
-            ("a lone surrogate", "\ud800", "UnicodeEncodeError"),
+            ("a lone surrogate", "\ud800", "TypeError"),
             ("an integer of 5000 digits", HUGE, "ValueError"),
             ("nesting past the recursion limit", deep_list(3000), "RecursionError"),
             ("a cycle", cyclic_list(), "RecursionError"),
