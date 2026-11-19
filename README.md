@@ -1,56 +1,76 @@
 # fortress-kernel
 
-Optional **containment pack** for the governed action gate: unified control (SAGE-K / Lyapunov / Energy) with bounded slew. **Default branch: `Main`** (capital M). numpy required.
+Optional containment pack for the governed action gate (`observe-perceive`): a heuristic bounded-slew controller (three modes) with an HMAC-signed audit ledger. In the `lyapunov` and `energy` modes it limits how fast its blending coefficient (the share of the live signal it lets through) may change per call. It does not limit how fast the output itself moves: a jump in the live signal passes straight through, and the `sage` mode has no slew limit (EXECUTED 2026-11-15). It is not a verified controller and it enforces nothing outside its own process.
 
-## 1. Pipeline Position & Role
+Status: Alpha, version 1.0.0 (`pyproject.toml`). Last checked 2026-11-15 at commit `f5d15b2`. License: Apache-2.0. Default branch is `main` (checked 2026-11-18; it was `Main` on 2026-11-15, and that branch no longer exists). numpy is the only runtime dependency.
 
-**OPTIONAL CONTAINMENT** after/beside PERCEIVE, before or around execution. Wired from [`observe-perceive`](https://github.com/wking53214/observe-perceive) extra `fortress` (`fortress_perceive_adapter.py`). Not a standalone product. Distinct from AUGUR (veto simulation).
+## Role Within ≡TACK
 
-## 2. Full System Scope & Architectural Depth
+- **What it is.** An optional containment pack: `FortressUnified` in `fortress_unified.py` merges three strategies (`sage`, `lyapunov`, `energy`; default `energy`) behind `FortressConfig.controller_mode`.
+- **What it owns.** Its controller state, its integrity, invariant, drift and oscillation checks, and its own audit ledger.
+- **What it contributes.** A guard whose blending coefficient has a bounded slew, placed after PERCEIVE and before or around execution, where a consumer chooses to use it.
+- **What it does not own.** Policy approval, grants, simulation of futures, execution, or any enforcement of its verdicts. It returns a result; the caller decides whether to halt.
+- **Depends on.** numpy. Optionally CNS v4.0.0 for the connector.
+- **Depended on by.** `observe-perceive` through its `fortress` extra and `fortress_perceive_adapter.py` (INSPECTED: the adapter and two tests exist there). Whether that path runs in any live setup is UNKNOWN.
+- **Verified versus declared.** The adapter wiring exists in code. Nothing here proves the containment holds end to end.
+- **Governance and control design.** Containment, not authority. Fail-closed behavior depends on the consuming adapter treating a refusal as a halt; that is observe-perceive's job, not this repo's.
 
-`fortress_unified.py` merges three strategies behind `FortressConfig.controller_mode`: `"sage"` | `"lyapunov"` | `"energy"` (default energy).
+## Scope and exclusions
 
-Uncalibrated / hardcoded tunables (honest list, not exhaustive): `activation_threshold=0.45`, `authority_enter_threshold=0.55`, `authority_exit_threshold=0.35`, `nominal_slew=0.20`, `sensitivity=15.0`, `max_contraction_ratio=0.98`, `fim_beta=0.90`, `recovery_freeze_cycles=8`, `prov_risk_no_sig=0.5`, divergence caps `0.45` / scale `25.0`, buffer lengths 10/16, `rng_seed=42`.
+Not a policy approver, not AUGUR (veto simulation), and not VANGUARD. Mentions of ESN or Lyapunov in retired VANGUARD files are not this code.
 
-HMAC appears in the unified kernel; numpy state vectors are the actual control substrate.
+## Core implemented capabilities
 
-## 3. What It Does NOT Do / Non-Goals
+IMPLEMENTED (tests passed 2026-11-15): `IntegrityLayer` (refuses non-finite error), `InvariantMonitor`, `DriftMonitor`, `MandateLayer` (clamps an action delta; not called by `FortressUnified.process`), `OscillationDetector`, three controllers, and `ImmutableAuditLedger` (HMAC-signed, hash-chained records, verified by `verify_integrity`). `FortressUnified.process` applies only the numeric-safety refusal itself. It builds an `InvariantMonitor` and a `DriftMonitor` and calls neither.
 
-- Does not approve policy or issue grants.
-- Does not simulate futures (AUGUR).
-- Docstrings mentioning ESN/Lyapunov in **VANGUARD** are not this code; do not confuse the retired VANGUARD files with this package.
+The "Lyapunov" and "energy" names describe heuristics. This repo contains no stability proof (INFERRED from inspection; REPORTED by Phase 0). Do not read the names as a stability or containment guarantee.
 
-## 4. Brutally Honest Current Status & Gaps
+Tunables are engineering guesses, not fitted values: `activation_threshold=0.45`, `authority_enter_threshold=0.55`, `authority_exit_threshold=0.35`, `nominal_slew=0.20`, `sensitivity=15.0`, `max_contraction_ratio=0.98`, `fim_beta=0.90`, `recovery_freeze_cycles=8`, `prov_risk_no_sig=0.5`, `rng_seed=42`, and others in `FortressConfig`.
 
-Commercial red team: **FEATURE** (a well-made guard, not a market). Easy to rebuild per actuator. 48 tests. Unfrozen 2026-09-11. Thresholds are engineering guesses, not fitted controllers. Branch name `Main` breaks naive `git clone -b main`.
+## Layout and interfaces
 
-## 5. Core Invariants & Guarantees
+Single top-level module `fortress_unified.py`, plus the optional `fortress_cns_connector.py` and tests at the repo root. Exposed: `FortressConfig`, `FortressUnified.process(payload, error, live_signal)`, `kernel.audit` (the ledger). Consumed: nothing external.
 
-Bounded slew/target when the controller is actually invoked. Audit chain of interventions inside the module. Fail-closed only if the adapter treats containment refusal as halt — that is observe-perceive's job.
+## Trust model and failure behavior
 
-**Audit key.** `ImmutableAuditLedger` signs each record with an HMAC. The key comes from the `audit_key` argument or the `FORTRESS_AUDIT_KEY` environment variable. With neither set, it signs with a random key held only by that ledger, sets `ledger.ephemeral_key` to `True`, and logs a warning: tampering is still caught in-process, but the records cannot be verified anywhere else, and there is no built-in default key. `FortressUnified` builds its ledger without arguments, so for the kernel the environment variable is the only way to supply a key (or assign `kernel.audit` yourself after construction). An empty value counts as unset.
+- **Audit key.** The ledger signs with `audit_key`, or `FORTRESS_AUDIT_KEY`, or else a random per-ledger key. With no key set, `ledger.ephemeral_key` is `True`, a warning is logged, tampering is caught in-process only, and records cannot be verified elsewhere. "Caught" means an edited record fails `verify_integrity`. Deleting records from the end of the ledger, or all of them, still verifies (EXECUTED 2026-11-15). The ledger is held in memory only; this repo writes nothing to disk. `FortressUnified` builds its ledger with no arguments, so the environment variable is the way to supply a key. An empty value counts as unset.
+- **Old commit with a hard-coded key.** Commit `4105ccb5` signs with the fixed key `"fortress-key"` (INSPECTED with `git show`). `observe-perceive`'s `fortress` extra still pins that commit (INSPECTED). Anyone using that pin has a publicly known signing key. Moving the pin is an owner action.
+- HMAC with a shared key is integrity checking, not authentication of who wrote a record. Hashing is not authorization.
+- **Provenance is a label, not a check.** No signature is verified anywhere in this repo. The result says `VERIFIED` whenever the payload metadata has a non-empty `signature` value. Separately, the `lyapunov` and `energy` controllers drop their 0.5 risk penalty whenever the metadata contains the keys `source_id` and `signature`, whatever the values. A caller who adds those two keys can keep the override from engaging on inputs that would otherwise trigger it (EXECUTED 2026-11-15). Treat both as caller-supplied claims.
+- **Fixed fallback and silent defaults.** When the override engages, the output is blended toward the constant `50.0`, which is written in the code and is not configurable. Any `controller_mode` other than `sage` or `lyapunov`, including a typo, silently selects `energy`. Thirteen of the 29 `FortressConfig` fields, including `activation_threshold`, are never read by the code (INSPECTED).
+- **Failure behavior.** A NaN or infinite error is refused. Other inputs can still fail late: see the connector notes below for float32, huge values and NaN signals, each of which raises after the controller state has been updated.
 
-## 6. Inputs, Outputs & Type Contracts
+## Install and quick start
 
-`FortressConfig` + unified orchestrator in `fortress_unified.py`. Pin: `fortress-kernel @ git+…@4105ccb5`.
-
-## 7. Stack Integration Topology
-
-```text
-observe-perceive extra `fortress` → fortress_perceive_adapter → fortress_unified
-AUGUR is NOT this repo
-VANGUARD is retired specimens in TOUCHSTONE
 ```
+pip install -e '.[dev]'
+python -m pytest -q
+```
+
+The wheel lists `fortress_unified` and `fortress_cns_connector` as modules. No `tests/` folder exists: the tests are `test_*.py` at the repo root.
+
+## Testing and verification
+
+EXECUTED 2026-11-15 (Python 3.13): 82 passed, 1 skipped, 3 subtests passed. The skip is the CNS connector test because CNS was not installed. The README's earlier "48 tests" was stale. This shows the code behaves as tested. It does not show the controller is stable or the containment is sufficient.
+
+## Known limitations
+
+- Thresholds are uncalibrated. Rebuilding this guard per actuator is easy; treat it as a feature, not a product.
+- The `4105ccb5` pin issue above.
+- No stability analysis. Several validity checks the kernel contains are not called by `process`.
+- The `pyproject.toml` description and development-status classifier were corrected on 2026-11-15; previously they said "Production/Stable" and "mandate-driven control".
 
 ## 8. Connecting to CNS (optional)
 
-The kernel stands alone: numpy is still its only runtime dependency, nothing imports CNS when the kernel loads, and the 48 kernel tests pass with CNS absent. If CNS is installed, `fortress_cns_connector` expresses the kernel's own verdicts as `cns.gate` results so they can be resolved alongside gates from other repositories. It runs the kernel's own predicates unchanged and never re-implements a threshold.
+The kernel stands alone: numpy is still its only runtime dependency, nothing imports CNS when the kernel loads, and the kernel tests pass with CNS absent. If CNS is installed, `fortress_cns_connector` expresses the kernel's own verdicts as `cns.gate` results so they can be resolved alongside gates from other repositories. It runs the kernel's own predicates unchanged and never re-implements a threshold.
 
 ```
-pip install 'fortress-kernel[cns] @ git+https://github.com/wking53214/fortress-kernel.git@Main'
+pip install 'fortress-kernel[cns] @ git+https://github.com/wking53214/fortress-kernel.git@main'
 ```
 
-fortress-kernel is not on a package index, so the extra is installed from git (pin a commit instead of `Main` for a reproducible install, as in section 6) or from a checkout with `pip install '.[cns]'`. CNS needs Python 3.10 or newer.
+fortress-kernel is not on a package index, so the extra is installed from git (pin a commit instead of `main` for a reproducible install: use a current commit such as `f5d15b2`, checked 2026-11-15, and never `4105ccb5` or any other commit before `c361569`, because those sign with the hard-coded key) or from a checkout with `pip install '.[cns]'`. CNS needs Python 3.10 or newer.
+
+**The connector's error message still prints an older line.** `CnsNotInstalled` says `pip install 'fortress-kernel[cns] @ git+https://github.com/wking53214/fortress-kernel.git@Main'`. That line fails, because the branch `Main` no longer exists. The line above, ending in `@main`, installs (both EXECUTED 2026-11-18). The older line is repeated here because a test checks that this README contains the message's command word for word. Changing the message is a code change and has not been made.
 
 ```python
 from fortress_cns_connector import NumericSafetyGate, InvariantGate, AuditChainGate
@@ -90,4 +110,4 @@ Things to know:
 
 Without CNS installed, the connector's functions raise `CnsNotInstalled` with the install command. Nothing else in the kernel changes. The connector adds its own tests in `test_fortress_cns_independence.py` (run in a subprocess with CNS blocked, never skipped) and `test_fortress_cns_connector.py` (skipped when CNS is absent, unless `FORTRESS_REQUIRE_CNS=1`, which CI's `cns` job sets so a missing CNS fails there).
 
-Apache-2.0.
+Maintainer: William N. King.
