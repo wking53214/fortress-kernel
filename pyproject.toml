@@ -5,14 +5,14 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fortress-kernel"
 version = "1.0.0"
-description = "Minimal, composable governance kernel with integrity checking, invariant enforcement, and mandate-driven control."
+description = "Optional containment kernel: heuristic bounded-slew controller with an HMAC-signed audit ledger. Not a verified controller."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
 authors = [{ name = "William N. King", email = "wking53214@gmail.com" }]
 dependencies = ["numpy>=1.24.0"]
 classifiers = [
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "License :: OSI Approved :: Apache Software License",
