@@ -70,8 +70,6 @@ pip install 'fortress-kernel[cns] @ git+https://github.com/wking53214/fortress-k
 
 fortress-kernel is not on a package index, so the extra is installed from git (pin a commit instead of `main` for a reproducible install: use a current commit such as `f5d15b2`, checked 2026-11-15, and never `4105ccb5` or any other commit before `c361569`, because those sign with the hard-coded key) or from a checkout with `pip install '.[cns]'`. CNS needs Python 3.10 or newer.
 
-**The connector's error message still prints an older line.** `CnsNotInstalled` says `pip install 'fortress-kernel[cns] @ git+https://github.com/wking53214/fortress-kernel.git@Main'`. That line fails, because the branch `Main` no longer exists. The line above, ending in `@main`, installs (both EXECUTED 2026-11-18). The older line is repeated here because a test checks that this README contains the message's command word for word. Changing the message is a code change and has not been made.
-
 ```python
 from fortress_cns_connector import NumericSafetyGate, InvariantGate, AuditChainGate
 from cns.gate import resolve
