@@ -10,7 +10,7 @@ Status: Alpha, version 0.1.0 (`pyproject.toml`). Last checked 2026-11-15 at comm
 - **What it owns.** Its controller state, its integrity, invariant, drift and oscillation checks, and its own audit ledger.
 - **What it contributes.** A guard whose blending coefficient has a bounded slew, placed after PERCEIVE and before or around execution, where a consumer chooses to use it.
 - **What it does not own.** Policy approval, grants, simulation of futures, execution, or any enforcement of its verdicts. It returns a result; the caller decides whether to halt.
-- **Depends on.** numpy. Optionally CNS v4.0.0 for the connector.
+- **Depends on.** numpy. Optionally CNS v4.1.0 for the connector.
 - **Depended on by.** `observe-perceive` through its `fortress` extra and `fortress_perceive_adapter.py` (INSPECTED: the adapter and two tests exist there). Whether that path runs in any live setup is UNKNOWN.
 - **Verified versus declared.** The adapter wiring exists in code. Nothing here proves the containment holds end to end.
 - **Governance and control design.** Containment, not authority. Fail-closed behavior depends on the consuming adapter treating a refusal as a halt; that is observe-perceive's job, not this repo's.
