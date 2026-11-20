@@ -2,7 +2,7 @@
 
 Optional containment pack for the governed action gate (`observe-perceive`): a heuristic bounded-slew controller (three modes) with an HMAC-signed audit ledger. In the `lyapunov` and `energy` modes it limits how fast its blending coefficient (the share of the live signal it lets through) may change per call. It does not limit how fast the output itself moves: a jump in the live signal passes straight through, and the `sage` mode has no slew limit (EXECUTED 2026-11-15). It is not a verified controller and it enforces nothing outside its own process.
 
-Status: Alpha, version 1.0.0 (`pyproject.toml`). Last checked 2026-11-15 at commit `f5d15b2`. License: Apache-2.0. Default branch is `main` (checked 2026-11-18; it was `Main` on 2026-11-15, and that branch no longer exists). numpy is the only runtime dependency.
+Status: Alpha, version 0.1.0 (`pyproject.toml`). Last checked 2026-11-15 at commit `f5d15b2`. License: Apache-2.0. Default branch is `main` (checked 2026-11-18; it was `Main` on 2026-11-15, and that branch no longer exists). numpy is the only runtime dependency.
 
 ## Role Within ≡TACK
 
