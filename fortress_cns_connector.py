@@ -155,7 +155,7 @@ __all__ = [
 # the repository resolves, and so does ``pip install '.[cns]'`` from a checkout.
 INSTALL_HINT = (
     "pip install 'fortress-kernel[cns] @ "
-    "git+https://github.com/wking53214/fortress-kernel.git@Main'"
+    "git+https://github.com/wking53214/fortress-kernel.git@main'"
 )
 
 #: gate name -> (``cns.gate.GatePosition`` member name, default ``subject``).
