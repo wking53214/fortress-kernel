@@ -68,6 +68,11 @@ class FortressConfig:
     # Recovery & freezing
     recovery_freeze_cycles: int = 8
 
+    # Provenance. A payload counts as verified only when its signature is the HMAC-SHA256 of its source_id and body under
+    # this key (see payload_signature). There is no default key: with None, nothing is verified and every payload
+    # carries the unsigned risk below. The key is supplied by the caller and is never logged or stored by this module.
+    provenance_key: Optional[bytes] = field(default=None, repr=False)
+
     # Variance composition
     prov_risk_no_sig: float = 0.5
     volatility_weight: float = 0.05
@@ -112,6 +117,25 @@ class FortressStateTransition:
 class Payload:
     body: str
     metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+def payload_signature(key: bytes, payload: "Payload") -> str:
+    """The signature a payload must carry to be verified: HMAC-SHA256 over its source_id and body, as hex."""
+    if not isinstance(key, (bytes, bytearray)) or not key:
+        raise ValueError("the provenance key must be non-empty bytes")
+    source = payload.metadata.get("source_id")
+    message = json.dumps({"source_id": source, "body": payload.body}, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hmac.new(bytes(key), message, hashlib.sha256).hexdigest()
+
+
+def provenance_verified(config: "FortressConfig", payload: "Payload") -> bool:
+    """True only when config holds a provenance key and the payload's signature is the one that key produces for it."""
+    key = config.provenance_key
+    source = payload.metadata.get("source_id")
+    signature = payload.metadata.get("signature")
+    if not key or not isinstance(source, str) or not source or not isinstance(signature, str):
+        return False
+    return hmac.compare_digest(signature, payload_signature(key, payload))
 
 
 # ============================================================================
@@ -420,7 +444,7 @@ class LyapunovController(Controller):
         volatility = float(np.std(list(self.error_history))) if len(self.error_history) > 1 else 0.0
 
         # Verify provenance
-        is_verified = ("source_id" in payload.metadata and "signature" in payload.metadata)
+        is_verified = provenance_verified(self.config, payload)
         prov_risk = 0.0 if is_verified else self.config.prov_risk_no_sig
 
         # FIM divergence
@@ -495,7 +519,7 @@ class EnergyController(Controller):
         self.error_history.append(abs(error))
         volatility = float(np.std(list(self.error_history))) if len(self.error_history) > 1 else 0.0
 
-        is_verified = ("source_id" in payload.metadata and "signature" in payload.metadata)
+        is_verified = provenance_verified(self.config, payload)
         prov_risk = 0.0 if is_verified else self.config.prov_risk_no_sig
 
         variance = (volatility * self.config.volatility_weight) + prov_risk
@@ -609,7 +633,8 @@ class FortressUnified:
             controller_state[name] = value
 
         return {
-            "config": asdict(self.config),
+            # The provenance key is a secret: it is never written to the audit record.
+            "config": {k: v for k, v in asdict(self.config).items() if k != "provenance_key"},
             "payload": {"body": payload.body, "metadata": payload.metadata},
             "error": error,
             "live_signal": live_signal,
@@ -646,7 +671,7 @@ class FortressUnified:
         result = {
             **controller_result,
             "distortion": integrity_result.get("distortion", 0.0),
-            "integrity": "VERIFIED" if payload.metadata.get("signature") else "UNVERIFIED",
+            "integrity": "VERIFIED" if provenance_verified(self.config, payload) else "UNVERIFIED",
             "state_commitment": state_commitment,
         }
         if oscillation_detected is not None:

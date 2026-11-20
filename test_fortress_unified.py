@@ -12,6 +12,7 @@ from unittest.mock import Mock
 import numpy as np
 
 from fortress_unified import (
+    payload_signature,
     FortressConfig,
     FortressUnified,
     Payload,
@@ -26,6 +27,15 @@ from fortress_unified import (
     EnergyController,
     OperationalRegime,
 )
+
+
+KEY = b"test-only-provenance-key-0123456789"
+
+
+def _signed(body, source):
+    """A payload signed the way the kernel checks it, with the test key above (never a real key)."""
+    unsigned = Payload(body, {"source_id": source})
+    return Payload(body, {"source_id": source, "signature": payload_signature(KEY, unsigned)})
 
 
 class TestIntegrityLayer(unittest.TestCase):
@@ -337,10 +347,10 @@ class TestLyapunovController(unittest.TestCase):
         # Confirmed by mutation: with the freeze assignment replaced by 0 the
         # test still passed. A constant error has no volatility, so
         # distortion sat at ~0.5 and governance never engaged at all.
-        config = FortressConfig(controller_mode="lyapunov", recovery_freeze_cycles=8)
+        config = FortressConfig(controller_mode="lyapunov", recovery_freeze_cycles=8, provenance_key=KEY)
         controller = LyapunovController(config)
         unsigned = Payload("Fail", {})
-        signed = Payload("Calm", {"source_id": "s", "signature": "sig"})
+        signed = _signed("Calm", "s")
 
         # Volatile, unsigned input: governance engages and the freeze is armed.
         for error in [0.0, 60.0] * 6:
@@ -441,10 +451,10 @@ class TestFortressUnified(unittest.TestCase):
         self.assertEqual(result["controller"], "ENERGY")
 
     def test_verified_vs_unverified_payload(self):
-        config = FortressConfig()
+        config = FortressConfig(provenance_key=KEY)
         fortress = FortressUnified(config)
 
-        payload_verified = Payload("Test", {"source_id": "test", "signature": "valid"})
+        payload_verified = _signed("Test", "test")
         payload_unverified = Payload("Test", {})
 
         result_verified = fortress.process(payload_verified, 5.0, 100.0)
@@ -535,6 +545,51 @@ class TestIntegration(unittest.TestCase):
 
         self.assertEqual(len(fortress.audit.ledger), 3)
         self.assertTrue(fortress.audit.verify_integrity())
+
+class TestProvenanceIsChecked(unittest.TestCase):
+    """A signature counts only when it is the HMAC of the payload under the caller's key."""
+
+    def verdict(self, payload, key=KEY):
+        return FortressUnified(FortressConfig(provenance_key=key)).process(payload, 5.0, 100.0)["integrity"]
+
+    def test_a_correct_signature_verifies(self):
+        self.assertEqual(self.verdict(_signed("Test", "s")), "VERIFIED")
+
+    def test_a_made_up_signature_does_not(self):
+        self.assertEqual(self.verdict(Payload("Test", {"source_id": "s", "signature": "valid"})), "UNVERIFIED")
+
+    def test_a_changed_body_or_source_breaks_the_signature(self):
+        good = _signed("Test", "s")
+        self.assertEqual(self.verdict(Payload("Changed", good.metadata)), "UNVERIFIED")
+        self.assertEqual(self.verdict(Payload("Test", {**good.metadata, "source_id": "other"})), "UNVERIFIED")
+
+    def test_a_signature_under_another_key_does_not_verify(self):
+        self.assertEqual(self.verdict(_signed("Test", "s"), key=b"another-key-of-some-length"), "UNVERIFIED")
+
+    def test_with_no_key_nothing_is_verified(self):
+        self.assertEqual(self.verdict(_signed("Test", "s"), key=None), "UNVERIFIED")
+
+    def test_adding_the_two_keys_no_longer_drops_the_unsigned_risk(self):
+        for mode in ("lyapunov", "energy"):
+            keyed = FortressConfig(controller_mode=mode, provenance_key=KEY)
+            forged = Payload("x", {"source_id": "s", "signature": "anything"})
+            plain = Payload("x", {})
+            a = FortressUnified(keyed).process(forged, 5.0, 100.0)
+            b = FortressUnified(keyed).process(plain, 5.0, 100.0)
+            self.assertEqual(a["distortion"], b["distortion"], mode)
+
+    def test_the_key_is_never_written_to_the_audit_record_or_the_repr(self):
+        fortress = FortressUnified(FortressConfig(provenance_key=KEY))
+        fortress.process(_signed("Test", "s"), 5.0, 100.0)
+        self.assertNotIn(KEY.decode(), json.dumps(fortress.audit.ledger, default=str))
+        self.assertNotIn(KEY.decode(), repr(fortress.config))
+
+    def test_the_key_must_be_non_empty_bytes(self):
+        with self.assertRaises(ValueError):
+            payload_signature(b"", Payload("x", {}))
+        with self.assertRaises(ValueError):
+            payload_signature("text", Payload("x", {}))  # type: ignore[arg-type]
+
 
 
 if __name__ == "__main__":

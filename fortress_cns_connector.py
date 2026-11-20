@@ -116,7 +116,7 @@ purpose, because the kernel defines no consequence for them and any outcome
 would be invented: ``DriftMonitor`` (an advisory ``(is_drifting, drift)``),
 ``OscillationDetector`` (``process`` records ``oscillation_detected`` and does
 nothing else with it) and the ``VERIFIED`` / ``UNVERIFIED`` label on the result
-(set from whether the payload carries a signature value; nothing acts on it).
+(set from whether the payload's signature checks out under the config's provenance key; nothing acts on it).
 
 fortress-kernel is not on a package index, so the extra is installed from git
 or from a checkout (``pip install '.[cns]'``); see ``INSTALL_HINT``.
